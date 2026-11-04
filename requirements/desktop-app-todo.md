@@ -98,8 +98,8 @@ Decision made while writing `ui.go`: the input fields are disabled while a run i
 - [x] **[Claude]** Inject the version with `-ldflags "-X main.version=$(VERSION)"`, read from the root `VERSION` file. Do not add a second copy.
 - [x] **[Claude]** Hide the console window on the Windows build with `-ldflags "-H=windowsgui"`.
 - [x] **[Claude]** Add `gamedistapp`, `gamedistapp.exe` and the existing CLI binaries to `dist/gamedist.zip`. `build-desktop` appends the two desktop binaries.
-- [ ] **[Claude]** Check that `make test`, `go vet ./...` and `make lint` run without the `desktop` tag, and without the GUI packages.
-- [ ] **[Claude]** Check that `make build` produces all four binaries.
+- [x] **[Claude]** Check that `make test`, `go vet ./...` and `make lint` run without the `desktop` tag, and without the GUI packages. `go vet ./...` and `make lint` pass. `make test` was not run, because it runs `go get -u`, which rewrites `go.mod`; `go test ./...` passes instead. Lint also passes on the desktop code with `--build-tags desktop`.
+- [x] **[Claude]** Check that `make build` produces all four binaries. It produces `bin/gamedist`, `bin/gamedist.exe`, `bin/gamedistapp` and `bin/gamedistapp.exe`, and `dist/gamedist.zip`.
 - [ ] **[You]** Test `gamedistapp.exe` on the Windows machine.
 
 ## Phase 6: Release workflow (`.github/workflows/fsl-release.yml`)

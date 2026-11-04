@@ -53,7 +53,7 @@ func TestSavedThemeIsApplied(t *testing.T) {
 
 	u := newUI(a, "v1.0.0")
 	defer u.splash.finish()
-	if !reflect.DeepEqual(a.Settings().Theme(), theme.DarkTheme()) {
+	if !reflect.DeepEqual(a.Settings().Theme(), newVariantTheme(theme.VariantDark)) {
 		t.Errorf("dark theme not applied at startup")
 	}
 }
@@ -64,7 +64,7 @@ func TestNoSavedThemeStartsLight(t *testing.T) {
 	defer a.Quit()
 	u := newUI(a, "v1.0.0")
 	defer u.splash.finish()
-	if !reflect.DeepEqual(a.Settings().Theme(), theme.LightTheme()) {
+	if !reflect.DeepEqual(a.Settings().Theme(), newVariantTheme(theme.VariantLight)) {
 		t.Errorf("light theme not applied when nothing is saved")
 	}
 }

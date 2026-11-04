@@ -187,11 +187,8 @@ START:
 			}
 		}
 		for j := 0; j < d.playersPerFixture; j++ {
-			var filled int
-			filled = d.getFilled(playerFixtures)
-			if filled == d.numPlayers && d.remainderSlots > 0 {
+			if d.getFilled(playerFixtures) == d.numPlayers && d.remainderSlots > 0 {
 				d.playerMustPlay++
-				filled = d.getFilled(playerFixtures)
 			}
 			currentPlayer := d.choosePlayer(currFixture, playerFixtures, playerBlock)
 			d.debugCurrPlayer = currentPlayer
@@ -293,10 +290,7 @@ func (d *Distributor) choosePlayer(currFixture int, playerFixtures map[int]int, 
 // isInFixture returns true if a player is already in a fixture
 func (d *Distributor) isInFixture(player, fixture int) bool {
 	fix := mat.Row(nil, fixture, d.matrix)
-	if fix[player] == 1 {
-		return true
-	}
-	return false
+	return fix[player] == 1
 }
 
 // recoveredError converts a panic recovered by Distribute into an error that says where the run had reached

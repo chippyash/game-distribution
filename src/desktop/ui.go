@@ -412,11 +412,11 @@ var themeChoices = []struct{ code, label string }{
 func applyTheme(a fyne.App, code string) {
 	switch code {
 	case model.ThemeDark:
-		a.Settings().SetTheme(theme.DarkTheme())
+		a.Settings().SetTheme(newVariantTheme(theme.VariantDark))
 	case model.ThemeSystem:
 		a.Settings().SetTheme(theme.DefaultTheme())
 	default:
-		a.Settings().SetTheme(theme.LightTheme())
+		a.Settings().SetTheme(newVariantTheme(theme.VariantLight))
 	}
 }
 
