@@ -43,6 +43,7 @@ should make the same capability available to users who do not want to use a term
 - Changing fixtures, players, players per fixture, maximum players together, attempts or fixture spacing clears the matrix and
   disables Save until the next run, so a saved file never disagrees with the inputs on screen
 - An About dialog shows the app version and the FSL-1.1 notice
+- The window shows `src/desktop/resources/icon-linux.jpeg` as its icon
 
 ## Non-Functional Requirements
 
@@ -51,6 +52,9 @@ should make the same capability available to users who do not want to use a term
 - Target platforms: Linux and Windows
 - Windows binary is cross-compiled from Linux with a MinGW-w64 cross-compiler, so that `make build` still produces both binaries
 - The Windows app hides the console window
+- The icon image is embedded in the binary at build time, so the app does not depend on the file's location when it runs. JPEG is accepted; no conversion is needed.
+- The Windows `.exe` has `src/desktop/resources/icon-windows.ico` as its file icon. The icon is compiled into the executable as a Windows resource, so the binary is self-contained.
+- Each binary embeds its own icon. The Linux binary embeds `icon-linux.jpeg` for its window icon. The Windows binary embeds `icon-windows.ico` for its file icon, and `icon-linux.jpeg` for its window icon.
 - Distribution method: binaries packaged into dist/gamedist.zip as gamedistapp (Linux) and gamedistapp.exe (Windows), alongside the CLI binaries
 - `dist/` is no longer tracked in git, and is listed in `.gitignore` again. The release workflow builds the zip and attaches it to the draft release.
 - The release workflow installs the Linux GUI development packages (OpenGL and X11 headers) and MinGW-w64, so that tagged releases include the desktop app

@@ -19,13 +19,23 @@ help:  ## Print the help documentation
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: build
-build: clean build-gamedist ## Build the binaries
+build: clean build-gamedist build-desktop ## Build the binaries
 
 .PHONY: build-gamedist
 build-gamedist:
 	env GOOS=linux go build -ldflags="-s -w" -o bin/gamedist src/cli/gamedist-cli.go
 	env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o bin/gamedist.exe src/cli/gamedist-cli.go
 	zip -9 -j dist/gamedist.zip bin/gamedist bin/gamedist.exe README.md
+
+.PHONY: desktop-icon
+desktop-icon: ## Compile the Windows executable icon into the desktop package
+	x86_64-w64-mingw32-windres src/desktop/resources/icon-windows.rc -O coff -o src/desktop/icon_windows_amd64.syso
+
+.PHONY: build-desktop
+build-desktop: desktop-icon ## Build the desktop app binaries
+	env GOOS=linux CGO_ENABLED=1 go build -tags desktop -ldflags="-s -w -X main.version=$(VERSION)" -o bin/gamedistapp ./src/desktop/
+	env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go build -tags desktop -ldflags="-s -w -H=windowsgui -X main.version=$(VERSION)" -o bin/gamedistapp.exe ./src/desktop/
+	zip -9 -j dist/gamedist.zip bin/gamedistapp bin/gamedistapp.exe
 
 .PHONY: version
 version:

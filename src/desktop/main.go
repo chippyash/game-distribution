@@ -13,6 +13,9 @@
 package main
 
 import (
+	_ "embed"
+
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"github.com/go-gl/glfw/v3.4/glfw"
 )
@@ -20,12 +23,18 @@ import (
 // version is set at build time with -ldflags "-X main.version=<VERSION>"
 var version = "dev"
 
+// windowIcon is the window icon, embedded so the binary does not depend on the file's location
+//
+//go:embed resources/icon-linux.jpeg
+var windowIcon []byte
+
 func main() {
 	// On a Wayland session the pointer is offset from the drawn widgets, so use X11 (XWayland) when it is available
 	if glfw.PlatformSupported(glfw.PlatformX11) {
 		glfw.InitHint(glfw.PlatformHint, int(glfw.PlatformX11))
 	}
 	a := app.New()
+	a.SetIcon(fyne.NewStaticResource("icon-linux.jpeg", windowIcon))
 	w := newWindow(a, version)
 	w.ShowAndRun()
 }

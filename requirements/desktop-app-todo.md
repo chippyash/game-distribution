@@ -60,17 +60,24 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [x] **[Claude]** Compile the Fyne code. `go vet -tags desktop ./src/desktop/` passes, and `go build -tags desktop` produces a Linux binary.
 - [x] **[Claude]** Test the grid at 100 fixtures by 50 players, using Fyne's test driver. `src/desktop/ui_test.go` runs a real 100 by 50 distribution, checks the grid size in both orientations, and reads every cell through the table callbacks. It needs the `desktop` tag.
 - [x] **[Claude]** Fix the pointer offset reported on the Wayland session: `main.go` asks GLFW for X11 (XWayland) before creating the window. A probe confirmed the X11 platform is selected.
+- [x] **[Claude]** Embed `resources/icon-linux.jpeg` with `go:embed` in `main.go`, and set it as the application icon with `a.SetIcon` before the window is created. JPEG is decoded by Fyne, so no conversion is needed.
+- [ ] **[Claude]** Test that the embedded icon is non-empty and decodes as an image.
+- [ ] **[You]** Check that the icon appears in the window title bar on Linux.
+- [x] **[Claude]** Create `src/desktop/resources/icon-windows.ico` from `icon-linux.jpeg`, with 16, 24, 32, 48, 64, 128 and 256 pixel sizes.
+- [x] **[Claude]** Embed `icon-windows.ico` in the Windows `.exe`. `src/desktop/resources/icon-windows.rc` is compiled to `src/desktop/icon_windows_amd64.syso` by `make desktop-icon`, which is ignored by git. The Windows build checked: the `.exe` has a `.rsrc` section.
+- [ ] **[You]** Check the icon on the Windows `.exe` in Explorer, and the window icon on Windows.
+- [x] **[You]** Decide whether the Windows `.exe` needs an icon as well. Decided: yes.
 - [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
 
 Decision made while writing `ui.go`: the input fields are disabled while a run is going, so the finished matrix always matches the settings shown on screen. The requirements didn't cover this. Tell me if you want the inputs to stay editable during a run.
 
 ## Phase 5: Build (`Makefile`)
 
-- [ ] **[Claude]** Add build targets for `gamedistapp` (Linux) and `gamedistapp.exe` (Windows). The Windows target uses `CC=x86_64-w64-mingw32-gcc` and `CGO_ENABLED=1`.
-- [ ] **[Claude]** Pass `-tags desktop` to the desktop builds only. The CLI build is unchanged.
-- [ ] **[Claude]** Inject the version with `-ldflags "-X main.version=$(VERSION)"`, read from the root `VERSION` file. Do not add a second copy.
-- [ ] **[Claude]** Hide the console window on the Windows build with `-ldflags "-H=windowsgui"`.
-- [ ] **[Claude]** Add `gamedistapp`, `gamedistapp.exe` and the existing CLI binaries to `dist/gamedist.zip`.
+- [x] **[Claude]** Add build targets for `gamedistapp` (Linux) and `gamedistapp.exe` (Windows). The Windows target uses `CC=x86_64-w64-mingw32-gcc` and `CGO_ENABLED=1`.
+- [x] **[Claude]** Pass `-tags desktop` to the desktop builds only. The CLI build is unchanged.
+- [x] **[Claude]** Inject the version with `-ldflags "-X main.version=$(VERSION)"`, read from the root `VERSION` file. Do not add a second copy.
+- [x] **[Claude]** Hide the console window on the Windows build with `-ldflags "-H=windowsgui"`.
+- [x] **[Claude]** Add `gamedistapp`, `gamedistapp.exe` and the existing CLI binaries to `dist/gamedist.zip`. `build-desktop` appends the two desktop binaries.
 - [ ] **[Claude]** Check that `make test`, `go vet ./...` and `make lint` run without the `desktop` tag, and without the GUI packages.
 - [ ] **[Claude]** Check that `make build` produces all four binaries.
 - [ ] **[You]** Test `gamedistapp.exe` on the Windows machine.
