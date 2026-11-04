@@ -19,7 +19,11 @@ And provides you with a distribution matrix that you can optionally load into a 
 ## Installation
 
 ### All platforms
-Unzip the supplied `dist/gamedist.zip` file to somewhere convenient
+Download the release package (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
+convenient, e.g. `tar -xzf dist-<version>.tar.gz -C <somewhereconvenient>`. The package contains the binaries for each
+platform, so use the one for yours:
+ - Linux: `gamedist`
+ - Windows: `gamedist.exe`
 
 ### Linux
 Run the following commands
@@ -29,8 +33,8 @@ are good choices
  - move the `<somewhereconvenient>/gamedist` file to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
    - NB - you may need to prefix the last command with `sudo` depending on your target
  - type `gamedist help` to ensure you have installed correctly
- - remove the extract directory and zip file to clean up 
-   - `rm gamedist.zip`
+ - remove the extract directory and release package to clean up 
+   - `rm dist-<version>.tar.gz`
    - `rm -rf <somewhereconvenient>`  
    - Do take care that you are targeting correctly! Else use your graphical file manager
    - You may want to keep the readme file somewhere for later reference.
@@ -44,7 +48,15 @@ are good choices
  - Add your new path, `;C:/Program Files/Gamedist`
  - Open a Cmd terminal
  - Type `gamedist.exe help` to ensure you have installed correctly
- - remove the extract directory and zip file to clean up. You may want to keep the readme file somewhere for later reference.
+ - remove the extract directory and release package to clean up. You may want to keep the readme file somewhere for later reference.
+
+## Building from source
+You need Go (1.21 or later), `make` and the `zip` tool. Run `make build` from the project root. It writes:
+ - `bin/gamedist`: the Linux binary
+ - `bin/gamedist.exe`: the Windows binary
+ - `dist/gamedist.zip`: a zip containing both binaries and this readme
+
+`dist/` is not tracked in git. Use the release package for a supported build.
 
 ## Usage:
  - For Linux the command is `gamedist`. For Windows it is `gamedist.exe`. Both commands are used in a terminal.
