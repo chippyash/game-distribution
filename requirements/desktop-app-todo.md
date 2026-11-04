@@ -70,6 +70,17 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [x] **[Claude]** Splash screen: embed `resources/splash.jpeg` with `go:embed`. Show it scaled to fit and centred over the main window, then after 2 seconds fade it out over 3 seconds with a `canvas.Image` `Translucency` animation (`fyne.NewAnimation`), and remove it when the fade finishes. The JPEG is accepted; Fyne decodes it. Input is blocked while the splash is showing, including during the fade.
 - [x] **[Claude]** Test that the splash is removed after the fade, and that the controls are usable afterwards. `src/desktop/splash_test.go` checks the timings, the input lock, the fade values and the release of the controls. The splash code is in `src/desktop/splash.go`.
 - [ ] **[You]** Check the splash on Linux and Windows.
+
+Application menu (in the window: Theme, About, Help; no keyboard shortcuts):
+
+- [x] **[Claude]** Use the preferences app ID `com.chippyash.gamedistributor`: create the app with `app.NewWithID` in `main.go`.
+- [x] **[Claude]** Add the in-window menu with three entries: Theme, About and Help. Remove the About button from the window, so the menu's About entry replaces it. The About dialog itself is unchanged.
+- [x] **[Claude]** Theme dialog: three choices, light, dark and following the system setting, with OK and Cancel. Show the current choice as selected when the dialog opens. OK applies the theme to the whole window and saves it with Fyne's preferences. Cancel changes nothing.
+- [x] **[Claude]** Start in the light theme until a choice has been saved. Read the saved choice when the app opens. The splash is not affected by the theme.
+- [x] **[Claude]** Help: open `https://github.com/chippyash/game-distribution/blob/<version>/README.md` in the default browser, where `<version>` is the injected `VERSION` value. Put the URL builder in `src/desktop/model`, so it can be tested without the UI. If the browser can't be opened, show the error in a dialog.
+- [x] **[Claude]** Test the Help URL builder, the theme preference round trip (save, then read back), and the menu entries.
+- [x] **[Claude]** About dialog: replace the last line (the LICENSE reference) with a link to `https://github.com/chippyash/game-distribution/releases/tag/<version>`, where `<version>` is the `VERSION` value. The URL is built in `src/desktop/model/links.go`, with a test. The link is a Fyne hyperlink in the dialog.
+- [ ] **[You]** Check the menu, the theme dialog, the theme change and the Help link on Linux and Windows.
 - [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
 
 Decision made while writing `ui.go`: the input fields are disabled while a run is going, so the finished matrix always matches the settings shown on screen. The requirements didn't cover this. Tell me if you want the inputs to stay editable during a run.

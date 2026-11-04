@@ -33,7 +33,7 @@ func main() {
 	if glfw.PlatformSupported(glfw.PlatformX11) {
 		glfw.InitHint(glfw.PlatformHint, int(glfw.PlatformX11))
 	}
-	a := app.New()
+	a := app.NewWithID("com.chippyash.gamedistributor")
 	a.SetIcon(fyne.NewStaticResource("icon-linux.jpeg", windowIcon))
 	w := newWindow(a, version)
 	w.ShowAndRun()

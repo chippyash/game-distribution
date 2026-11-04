@@ -9,7 +9,7 @@ should make the same capability available to users who do not want to use a term
 ## Scope
 
 - One distribution is created at a time.
-- Settings are not saved or reloaded between sessions.
+- The theme choice is remembered and reloaded between sessions, using Fyne's native preferences. No other settings are saved or reloaded.
 - The CLI is unchanged and remains part of the release.
 
 ## Functional Requirements
@@ -42,7 +42,14 @@ should make the same capability available to users who do not want to use a term
 - Toggling transpose re-draws the current matrix immediately
 - Changing fixtures, players, players per fixture, maximum players together, attempts or fixture spacing clears the matrix and
   disables Save until the next run, so a saved file never disagrees with the inputs on screen
-- An About dialog shows the app version and the FSL-1.1 notice
+- An application menu in the window, with three entries: Theme, About and Help
+- Theme opens a dialog with three choices: light, dark, and following the system setting. The dialog has OK and Cancel buttons. OK applies the chosen theme and remembers it between sessions, using Fyne's native preferences. Cancel changes nothing.
+- The app starts in the light theme until a choice is made.
+- The splash screen is not affected by the theme.
+- Menu entries have no keyboard shortcuts.
+- Help opens `https://github.com/chippyash/game-distribution/blob/<version>/README.md` in the user's default web browser, where `<version>` is the value in the `VERSION` file, for example `v1.0.0`.
+- If the browser can't be opened for Help, a dialog shows the error
+- About opens a dialog that shows the app version and the FSL-1.1 notice. The last line of the dialog is a link to `https://github.com/chippyash/game-distribution/releases/tag/<version>`, where `<version>` is the value in the `VERSION` file. The link replaces the reference to the LICENSE file. The menu's About entry replaces the About button, which is removed from the window.
 - The window shows `src/desktop/resources/icon-linux.jpeg` as its icon
 - When the app opens, `src/desktop/resources/splash.jpeg` is shown in the window, scaled to fit and centred. After 2 seconds it fades out over 3 seconds to reveal the main window. Input is blocked while the splash is showing, including during the fade. This happens on every launch.
 
@@ -53,6 +60,8 @@ should make the same capability available to users who do not want to use a term
 - Target platforms: Linux and Windows
 - Windows binary is cross-compiled from Linux with a MinGW-w64 cross-compiler, so that `make build` still produces both binaries
 - The Windows app hides the console window
+- The preferences app ID is `com.chippyash.gamedistributor`
+- The Help link uses the version injected at build time from the `VERSION` file, so each build links to the README for that version
 - The icon image is embedded in the binary at build time, so the app does not depend on the file's location when it runs. JPEG is accepted; no conversion is needed.
 - The splash image is embedded in the binary at build time, as the window icon is.
 - The Windows `.exe` has `src/desktop/resources/icon-windows.ico` as its file icon. The icon is compiled into the executable as a Windows resource, so the binary is self-contained.

@@ -43,8 +43,8 @@ func TestSplashBlocksInputUntilFaded(t *testing.T) {
 	if !u.splashing {
 		t.Fatalf("splash not showing at launch")
 	}
-	if !u.start.Disabled() || !u.about.Disabled() {
-		t.Errorf("start or about enabled while the splash is showing")
+	if !u.start.Disabled() {
+		t.Errorf("start enabled while the splash is showing")
 	}
 	for _, in := range u.inputs {
 		if !in.Disabled() {
@@ -64,8 +64,8 @@ func TestSplashBlocksInputUntilFaded(t *testing.T) {
 	if u.splashing {
 		t.Errorf("splash still showing after the fade")
 	}
-	if u.start.Disabled() || u.about.Disabled() {
-		t.Errorf("start or about still disabled after the splash")
+	if u.start.Disabled() {
+		t.Errorf("start still disabled after the splash")
 	}
 	for _, in := range u.inputs {
 		if in.Disabled() {

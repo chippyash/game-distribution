@@ -17,6 +17,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/chippyash/gamedistributor/src/desktop/model"
@@ -34,6 +36,8 @@ import (
 // ui holds the widgets and the state of the window. Widgets are only touched from the Fyne UI thread.
 type ui struct {
 	win     fyne.Window
+	app     fyne.App
+	menu    *fyne.MainMenu
 	version string
 
 	fixtures, players, perFixture, maxTogether, attempts *widget.Entry
@@ -41,7 +45,6 @@ type ui struct {
 	inputs                                               []fyne.Disableable
 	spacing, transpose                                   *widget.Check
 	start, cancel, save                                  *widget.Button
-	about                                                *widget.Button
 	splash                                               *splashScreen
 	splashing                                            bool
 	spinner                                              *widget.ProgressBarInfinite
@@ -63,8 +66,9 @@ func newWindow(a fyne.App, version string) fyne.Window {
 
 // newUI builds the main window and returns the state behind it
 func newUI(a fyne.App, version string) *ui {
-	u := &ui{win: a.NewWindow("Game Distributor"), version: version, fieldErrs: map[string]*widget.Label{}}
+	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}}
 	u.win.Resize(fyne.NewSize(1000, 700))
+	applyTheme(a, model.ThemeFromPreference(a.Preferences().String(model.PrefTheme)))
 
 	u.fixtures = u.numberEntry("", model.FieldFixtures, "Fixtures")
 	u.players = u.numberEntry("", model.FieldPlayers, "Players")
@@ -82,7 +86,6 @@ func newUI(a fyne.App, version string) *ui {
 	u.cancel.Disable()
 	u.save = widget.NewButton("Save CSV", u.onSave)
 	u.save.Disable()
-	u.about = widget.NewButton("About", u.onAbout)
 
 	u.spinner = widget.NewProgressBarInfinite()
 	u.spinner.Hide()
@@ -106,9 +109,15 @@ func newUI(a fyne.App, version string) *ui {
 		container.NewGridWithColumns(2, u.start, u.cancel),
 		u.spinner,
 		u.status,
-		container.NewGridWithColumns(2, u.save, u.about),
+		u.save,
 	)
 	panel := container.New(layout.NewGridWrapLayout(fyne.NewSize(600, 140)), container.NewVScroll(u.panel))
+	u.menu = fyne.NewMainMenu(fyne.NewMenu("Menu",
+		fyne.NewMenuItem("Theme", u.onTheme),
+		fyne.NewMenuItem("About", u.onAbout),
+		fyne.NewMenuItem("Help", u.onHelp),
+	))
+	u.win.SetMainMenu(u.menu)
 	main := container.NewBorder(nil, panel, controls, nil, u.table)
 	u.splashing = true
 	u.splash = newSplashScreen(version, u.splashDone)
@@ -190,10 +199,8 @@ func (u *ui) updateButtons() {
 		}
 		u.start.Disable()
 		u.save.Disable()
-		u.about.Disable()
 		return
 	}
-	u.about.Enable()
 	if u.running || len(errs) > 0 {
 		u.start.Disable()
 	} else {
@@ -360,10 +367,83 @@ func (u *ui) onSave() {
 }
 
 func (u *ui) onAbout() {
+	if u.splashing {
+		return
+	}
 	text := fmt.Sprintf("Game Distributor %s\n\nCopyright (c) 2026 Ashley Kitson, UK\n\n"+
 		"This software is licensed under the Functional Source License, Version 1.1 (FSL-1.1).\n"+
 		"You may use, copy, modify, and distribute this software for non-competing purposes.\n\n"+
 		"After two years from the release date of a specific version, that version automatically converts to the "+
-		"Apache License, Version 2.0.\n\nSee the LICENSE file in the project root for full license terms.", u.version)
-	dialog.ShowInformation("About", text, u.win)
+		"Apache License, Version 2.0.", u.version)
+	body := widget.NewLabel(text)
+	body.Wrapping = fyne.TextWrapWord
+	link, err := url.Parse(model.ReleaseURL(u.version))
+	if err != nil {
+		dialog.ShowError(err, u.win)
+		return
+	}
+	dialog.NewCustom("About", "Close", container.NewVBox(body, widget.NewHyperlink(link.String(), link)), u.win).Show()
+}
+
+// themeChoices are the theme options shown in the Theme dialog, with the label the user sees for each
+var themeChoices = []struct{ code, label string }{
+	{model.ThemeLight, "Light"},
+	{model.ThemeDark, "Dark"},
+	{model.ThemeSystem, "System"},
+}
+
+// applyTheme sets the Fyne theme for the app. System follows the operating system's light or dark setting
+func applyTheme(a fyne.App, code string) {
+	switch code {
+	case model.ThemeDark:
+		a.Settings().SetTheme(theme.DarkTheme())
+	case model.ThemeSystem:
+		a.Settings().SetTheme(theme.DefaultTheme())
+	default:
+		a.Settings().SetTheme(theme.LightTheme())
+	}
+}
+
+// onTheme opens the Theme dialog. OK applies and saves the chosen theme. Cancel changes nothing
+func (u *ui) onTheme() {
+	if u.splashing {
+		return
+	}
+	current := model.ThemeFromPreference(u.app.Preferences().String(model.PrefTheme))
+	labels := make([]string, len(themeChoices))
+	selected := ""
+	for i, c := range themeChoices {
+		labels[i] = c.label
+		if c.code == current {
+			selected = c.label
+		}
+	}
+	group := widget.NewRadioGroup(labels, nil)
+	group.SetSelected(selected)
+	dialog.NewCustomConfirm("Theme", "OK", "Cancel", group, func(ok bool) {
+		if !ok {
+			return
+		}
+		for _, c := range themeChoices {
+			if c.label == group.Selected {
+				u.app.Preferences().SetString(model.PrefTheme, c.code)
+				applyTheme(u.app, c.code)
+			}
+		}
+	}, u.win).Show()
+}
+
+// onHelp opens the README for this version in the default browser. A failure is shown in a dialog
+func (u *ui) onHelp() {
+	if u.splashing {
+		return
+	}
+	link, err := url.Parse(model.HelpURL(u.version))
+	if err != nil {
+		dialog.ShowError(err, u.win)
+		return
+	}
+	if err := u.app.OpenURL(link); err != nil {
+		dialog.ShowError(err, u.win)
+	}
 }
