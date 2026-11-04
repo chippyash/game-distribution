@@ -1,6 +1,5 @@
 .idea
 *.iml
-dist
 bin
 CLAUDE.md
 distribution.csv
