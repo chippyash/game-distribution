@@ -1,0 +1,105 @@
+# Desktop App Implementation To-Do
+
+This is the implementation plan for `requirements/desktop-app.md`. Each task is marked with who carries it out:
+
+- **[Claude]**: I can do this in the repository.
+- **[You]**: needs an action from you, such as installing software, using a Windows machine, or pushing and releasing.
+- **[Both]**: I do the work, and you check or decide something.
+
+Status: Phases 0 to 2 are complete. Phase 3 is complete except the comparison with the CLI output. Phase 4 has its code
+compiled, and awaits a run on a Linux desktop. Phases 5 to 8 are not started.
+
+## Environment check
+
+- gcc and the GL and X11 development headers are installed.
+- The MinGW-w64 cross-compiler is installed.
+- Go is 1.21.0 locally. `GOTOOLCHAIN=auto` is in use, and Go fetches the toolchain that the Fyne version needs. `go.mod` now says `go 1.22.0`.
+- The Wayland client headers are installed. The Fyne code compiles and vets with the `desktop` tag.
+
+## Phase 0: Prerequisites
+
+- [x] **[You]** Install the MinGW-w64 cross-compiler: `sudo apt install gcc-mingw-w64-x86-64`
+- [x] **[Claude]** Use `GOTOOLCHAIN=auto` as required. Go has fetched Go 1.22 for the Fyne dependency.
+- [x] **[You]** Install the Wayland development headers: `sudo apt install libwayland-dev libxkbcommon-dev`. This is needed to compile the Fyne code.
+- [x] **[You]** Access to a Windows machine is available.
+- [ ] **[You]** Test `gamedistapp.exe` on the Windows machine once it is built (Phase 5).
+
+## Phase 1: Distributor changes (`src/distributor`)
+
+Decision: `Distribute` takes the context as its first argument, so the call becomes `Distribute(ctx)`. The CLI passes `context.Background()`.
+
+- [x] **[Claude]** Change `Distribute` to `Distribute(ctx context.Context) (dist *Distributor, err error)`.
+- [x] **[Claude]** Check `ctx.Err()` at the start of each attempt, and return it as the error when cancelled.
+- [x] **[Claude]** Add an attempt counter that is safe to read while a run is in progress. It uses `atomic.Int64`, exposed as `AttemptsMade() int`, and increments once per attempt.
+- [x] **[Claude]** Make the panic recovery return an error, so the result is never `(nil, nil)`.
+- [x] **[Claude]** Update the CLI call site and the existing distributor tests for the new signature.
+- [x] **[Claude]** Add tests: a cancelled context returns `context.Canceled`; `AttemptsMade` counts every attempt; a recovered panic returns a non-nil error.
+
+## Phase 2: Input validation (`src/desktop/model`, no Fyne import)
+
+- [x] **[Claude]** Implement validation for: attempts 1000–100000; fixtures, players, players per fixture and maximum players together at least 1; players per fixture not greater than players; fixtures at most 200; players at most 100. See `settings.go`.
+- [x] **[Claude]** Return one error per invalid field, so the UI can show it inline next to that field.
+- [x] **[Claude]** Write table-driven tests for every rule, including boundary values. See `settings_test.go`.
+
+## Phase 3: Result model (`src/desktop/model`, no Fyne import)
+
+- [x] **[Claude]** Build the secondary panel text from the same wording the CLI uses. Covers the summary, the effective Max Play Together note, the spacing note, "Attempt N of M" and "Cancelled after N attempts". See `summary.go`. "Too many attempts" is the distributor's error text, shown as-is.
+- [x] **[Claude]** Build the CSV content in the CLI layout, transposed when the transpose option is on. See `output.go`.
+- [x] **[Claude]** Build the matrix cell text: `X` for a player in a fixture and blank otherwise, with `P1…` and `F1…` labels. See `output.go`.
+- [ ] **[Claude]** Compare the CSV and the summary with the CLI output for the same inputs. The tests check the expected layout and wording, but not a byte-for-byte comparison with a CLI run.
+
+## Phase 4: Fyne application (`src/desktop`, behind the `desktop` build tag)
+
+- [x] **[Claude]** Add the Fyne dependency (v2.8.2) and update `go.mod` to the Go version it requires (`go 1.22.0`). This also changes the Go version for the CLI.
+- [x] **[Claude]** Build the window (`ui.go`). Inputs: fixtures, players, players per fixture, and the four options. Start, Cancel and Save buttons. A spinner and a status line. A matrix grid that scrolls in both directions. A secondary results panel.
+- [x] **[Claude]** Enable and disable buttons as specified: Save only when a matrix exists, and Start disabled while a run is running or cancelling.
+- [x] **[Claude]** Run each distribution in a goroutine, with a cancellable context. Poll `AttemptsMade` to update the status line. Widgets are only updated through `fyne.Do`.
+- [x] **[Claude]** Clear the matrix and disable Save when a non-transpose input changes. Redraw immediately when transpose changes.
+- [x] **[Claude]** Save dialog with the default name `distribution.csv`.
+- [x] **[Claude]** About dialog showing the version, and the FSL-1.1 notice. The version is set by `main.version` (`main.go`).
+- [x] **[Claude]** Compile the Fyne code. `go vet -tags desktop ./src/desktop/` passes, and `go build -tags desktop` produces a Linux binary.
+- [x] **[Claude]** Test the grid at 100 fixtures by 50 players, using Fyne's test driver. `src/desktop/ui_test.go` runs a real 100 by 50 distribution, checks the grid size in both orientations, and reads every cell through the table callbacks. It needs the `desktop` tag.
+- [x] **[Claude]** Fix the pointer offset reported on the Wayland session: `main.go` asks GLFW for X11 (XWayland) before creating the window. A probe confirmed the X11 platform is selected.
+- [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
+
+Decision made while writing `ui.go`: the input fields are disabled while a run is going, so the finished matrix always matches the settings shown on screen. The requirements didn't cover this. Tell me if you want the inputs to stay editable during a run.
+
+## Phase 5: Build (`Makefile`)
+
+- [ ] **[Claude]** Add build targets for `gamedistapp` (Linux) and `gamedistapp.exe` (Windows). The Windows target uses `CC=x86_64-w64-mingw32-gcc` and `CGO_ENABLED=1`.
+- [ ] **[Claude]** Pass `-tags desktop` to the desktop builds only. The CLI build is unchanged.
+- [ ] **[Claude]** Inject the version with `-ldflags "-X main.version=$(VERSION)"`, read from the root `VERSION` file. Do not add a second copy.
+- [ ] **[Claude]** Hide the console window on the Windows build with `-ldflags "-H=windowsgui"`.
+- [ ] **[Claude]** Add `gamedistapp`, `gamedistapp.exe` and the existing CLI binaries to `dist/gamedist.zip`.
+- [ ] **[Claude]** Check that `make test`, `go vet ./...` and `make lint` run without the `desktop` tag, and without the GUI packages.
+- [ ] **[Claude]** Check that `make build` produces all four binaries.
+- [ ] **[You]** Test `gamedistapp.exe` on the Windows machine.
+
+## Phase 6: Release workflow (`.github/workflows/fsl-release.yml`)
+
+- [ ] **[Claude]** Install `libgl1-mesa-dev`, `xorg-dev`, `libwayland-dev` and `gcc-mingw-w64-x86-64` on the Ubuntu runner.
+- [ ] **[Claude]** Make sure `make build` runs with the `desktop` tag, so that tagged releases include the desktop app.
+- [ ] **[You]** Decide whether the release should also include a macOS build. The requirements exclude macOS, so this is currently out of scope.
+- [ ] **[You]** Verify the workflow: push a test tag, check the draft release contents, then delete the test tag and release.
+
+## Phase 7: Documentation
+
+- [ ] **[Claude]** README: describe the desktop app and its binaries, add the new binaries to the release package list, and document build prerequisites for the desktop app.
+- [ ] **[Claude]** Update `CLAUDE.md` for the new packages, the `desktop` build tag, and the test commands.
+- [ ] **[Both]** Open question: Linux runtime libraries. Decide whether the README says users need OpenGL and X11 libraries installed. I can check this once the code is written, by running the binary on a minimal system.
+
+## Phase 8: Git and release
+
+- [ ] **[Claude]** Commit each phase to `feature/desktop-app`, when you ask.
+- [ ] **[You]** Push the branch and open a pull request, or ask me to push once the network is reachable.
+- [ ] **[You]** Merge to `master`, and create the release tag when you're ready.
+
+## Summary: what needs you
+
+1. Run the Linux app and check the GUI (Phase 4). Build it with `go build -tags desktop -o bin/gamedistapp ./src/desktop/`.
+2. Run the Linux app and check the GUI (Phase 4).
+3. Test the Windows app on your Windows machine (Phases 0, 4 and 5).
+4. Decide on macOS, and on the Linux runtime libraries (Phases 6 and 7).
+5. Verify the release workflow with a test tag (Phase 6).
+6. Push, open the pull request, merge, and tag (Phase 8).
+7. Decide whether inputs should stay editable during a run (Phase 4).

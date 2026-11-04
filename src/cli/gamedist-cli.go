@@ -11,6 +11,7 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"encoding/csv"
 	"fmt"
@@ -94,7 +95,7 @@ func cmd() cmdFunc {
 			return
 		}
 
-		dist, err := distributor.NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPlayersTogether, fixtureSpacing).Distribute()
+		dist, err := distributor.NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPlayersTogether, fixtureSpacing).Distribute(context.Background())
 		if err != nil {
 			println(err.Error())
 			return
