@@ -61,7 +61,7 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [x] **[Claude]** Test the grid at 100 fixtures by 50 players, using Fyne's test driver. `src/desktop/ui_test.go` runs a real 100 by 50 distribution, checks the grid size in both orientations, and reads every cell through the table callbacks. It needs the `desktop` tag.
 - [x] **[Claude]** Fix the pointer offset reported on the Wayland session: `main.go` asks GLFW for X11 (XWayland) before creating the window. A probe confirmed the X11 platform is selected.
 - [x] **[Claude]** Embed `resources/icon-linux.jpeg` with `go:embed` in `main.go`, and set it as the application icon with `a.SetIcon` before the window is created. JPEG is decoded by Fyne, so no conversion is needed.
-- [ ] **[Claude]** Test that the embedded icon is non-empty and decodes as an image.
+- [x] **[Claude]** Test that the embedded icon is non-empty and decodes as an image. `src/desktop/icon_test.go` checks the window icon and splash image.
 - [X] **[You]** Check that the icon appears in the window title bar on Linux.
 - [x] **[Claude]** Create `src/desktop/resources/icon-windows.ico` from `icon-linux.jpeg`, with 16, 24, 32, 48, 64, 128 and 256 pixel sizes.
 - [x] **[Claude]** Embed `icon-windows.ico` in the Windows `.exe`. `src/desktop/resources/icon-windows.rc` is compiled to `src/desktop/icon_windows_amd64.syso` by `make desktop-icon`, which is ignored by git. The Windows build checked: the `.exe` has a `.rsrc` section.
