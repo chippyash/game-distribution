@@ -1,0 +1,17 @@
+vpc:
+  securityGroupIds:
+    - Fn::ImportValue: zf4-vpc-infra-private-sg-id
+  privateSubnetIds:
+    - Fn::ImportValue: zf4-vpc-infra-private-subnet-a
+    - Fn::ImportValue: zf4-vpc-infra-private-subnet-b
+    - Fn::ImportValue: zf4-vpc-infra-private-subnet-c
+  vpcId:
+    Fn::ImportValue: zf4-vpc-infra-VPC
+
+logRetentionDays: 90
+#Debug level logging
+logLevel: 0
+versionPrune:
+  autoprune: true
+  versions: 1
+

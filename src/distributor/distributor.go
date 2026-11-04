@@ -2,8 +2,9 @@ package distributor
 
 import (
 	"fmt"
-	"github.com/kelindar/bitmap"
+	errs "github.com/chippyash/gamedistributor/src/errors"
 	"gonum.org/v1/gonum/mat"
+	"math"
 	"math/rand"
 	"runtime/debug"
 )
@@ -21,6 +22,8 @@ type Distributor struct {
 	debugCurrPlayer   int         //the current player being processed
 	fixtureSpacing    bool        //if true, the fixtures will be spaced evenly for each player
 	maxPlayerTogether int         //the maximum number of times that players to play together in all fixtures
+	minPlayTogether   int         //the minimum number of times that the same players must play together
+	minSameTeam       int         //the minimum number of times that the same team must play together
 }
 
 func NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPlayerTogether int, fixtureSpacing bool) *Distributor {
@@ -34,23 +37,82 @@ func NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPla
 		attempts:          attempts,
 		fixtureSpacing:    fixtureSpacing && numFixtures/numPlayers > 1,
 		maxPlayerTogether: maxPlayerTogether,
+		minPlayTogether:   minimumPlayTogether(numFixtures, numPlayers, playersPerFixture),
+		minSameTeam:       int(math.Ceil(float64(numPlayers) / (float64(numFixtures) / float64(playersPerFixture)))),
+	}
+
+	// a cap below the average can never be satisfied, so raise it to the minimum
+	if ret.maxPlayerTogether < ret.minPlayTogether {
+		ret.maxPlayerTogether = ret.minPlayTogether
 	}
 
 	return ret
 }
 
-func (d *Distributor) Distribute() mat.Matrix {
-	defer d.DoRecovery()
-	var allreadyPrinted bool
+// minimumPlayTogether returns the lowest play-together cap that can be satisfied: the average number of times
+// a pair of players shares a fixture, rounded up
+func minimumPlayTogether(numFixtures, numPlayers, playersPerFixture int) int {
+	pairs := numPlayers * (numPlayers - 1) / 2
+	if pairs == 0 {
+		return 0
+	}
+	pairAppearances := numFixtures * playersPerFixture * (playersPerFixture - 1) / 2
+	return (pairAppearances + pairs - 1) / pairs
+}
+
+// MaxPlayersTogether returns the play-together cap in force, which is the requested cap raised to the minimum
+// possible for the given settings if it was lower
+func (d *Distributor) MaxPlayersTogether() int {
+	return d.maxPlayerTogether
+}
+
+// Matrix returns the matrix that will be populated with the distribution
+// This should only be called after Distribute has been called
+// or the results will be undefined
+func (d *Distributor) Matrix() mat.Mutable {
+	return d.matrix
+}
+
+// MustPlay returns the number of fixtures each player must play
+// in order to be considered a valid distribution
+// i.e. the minimum number of fixtures per player
+func (d *Distributor) MustPlay() int {
+	return d.playerMustPlay
+}
+
+// RemainderSlots returns the number of playing slots that are left over after giving every player
+// and equal number of playing slots. These are used to give some players an additional playing slot
+func (d *Distributor) RemainderSlots() int {
+	return d.remainderSlots
+}
+
+// Attempts returns the number of attempts actually made to resolve the permutation
+func (d *Distributor) Attempts() int {
+	return d.attempts
+}
+
+// Distribute will attempt to distribute the fixtures into the matrix
+// It will return nil if it fails to find a valid distribution after the
+// number of attempts specified in the constructor
+// Otherwise it will return the distributor instance
+// This function is not thread safe
+func (d *Distributor) Distribute() (*Distributor, error) {
+	defer d.doRecovery()
+
 	var attempted int
+
+	// simple validation
+	if d.numPlayers < d.playersPerFixture {
+		return nil, errs.ErrTooFewPlayers
+	}
+
+	//old skool goto jump
 START:
 	if attempted >= d.attempts {
-		fmt.Printf("Too many attempts, exiting. Tried %d of %d\n", attempted, d.attempts)
-		return nil
+		return nil, errs.TooManyAttempts(attempted, d.attempts)
 	}
 	d.matrix = mat.NewDense(d.numFixtures, d.numPlayers, nil)
 	// How many fixtures have each player been allocated to
-	// map[player]numFixtures
 	playerFixtures := make(map[int]int, d.numPlayers)
 	//is player currently blocked from playing?
 	// map[player]bool
@@ -60,17 +122,7 @@ START:
 		playerBlock[i] = false
 	}
 
-	// Print out the game information
-	if !allreadyPrinted {
-		d.printHeader()
-		//validation
-		if d.numPlayers < d.playersPerFixture {
-			fmt.Println("Number of players must be greater than players per fixture")
-			return nil
-		}
-		allreadyPrinted = true
-	}
-
+	// for each fixture try to compute the players
 	for currFixture := 0; currFixture < d.numFixtures; currFixture++ {
 		d.debugCurrFixture = currFixture
 		playerIndex := 0
@@ -120,6 +172,8 @@ START:
 				//we can't allocate a player to this fixture
 				//which means the matrix is out of balance, so try again
 				attempted++
+				//reset the mustPlay figure
+				d.playerMustPlay = d.numFixtures * d.playersPerFixture / d.numPlayers
 				goto START
 			}
 			d.matrix.Set(currFixture, currentPlayer, float64(1))
@@ -129,62 +183,51 @@ START:
 			}
 		}
 		if currFixture == d.numFixtures-1 {
+			//reset the mustPlay figure
+			d.playerMustPlay = d.numFixtures * d.playersPerFixture / d.numPlayers
 			//Check the maxPlayerTogether
-			if d.maxPlayerTogether > 0 {
-				//playedTogether map[fixture]bimapOfPlayers
-				playedTogether := make(map[int][]bitmap.Bitmap, d.numPlayers)
-				for f := 0; f < d.numFixtures; f++ {
-					fixture := mat.Row(nil, f, d.matrix)
-					var together bitmap.Bitmap
-					for i := 0; i < d.numPlayers; i++ {
-						if fixture[i] == 1 {
-							together.Set(uint32(i))
-						}
-					}
-					playedTogether[f] = append(playedTogether[f], together)
-				}
-				//check to see if we have fixtures with the same players
-				samePlayers := make(map[int]uint16)
-				for f := 0; f < d.numFixtures; f++ {
-					samePlayers[uint64(playedTogether[f][0])]++
-				}
-				fmt.Printf("played = %v\n", playedTogether)
+			if d.checkPlayTogether() || d.checkMinPlays(playerFixtures) {
+				attempted++
+				goto START
 			}
-
-			d.Print(fmt.Sprintf("After attempt: %d", attempted+1))
 		}
 	}
 
-	t := mat.Transpose{Matrix: d.matrix}
-	return t
+	// set attempted to the figure for the amount of attempts actually made
+	d.attempts = attempted
+	//reset the mustPlay figure
+	d.playerMustPlay = d.numFixtures * d.playersPerFixture / d.numPlayers
+
+	return d, nil
 }
 
-func (d *Distributor) printHeader() {
-	var plural string
-	fmt.Printf("Players: %d, Fixtures: %d, Players per fixture: %d\n", d.numPlayers, d.numFixtures, d.playersPerFixture)
-	if d.playerSlots/d.numPlayers > 1 {
-		plural = "s"
-	}
-	fmt.Printf("Players must play: %d fixture%s\n", d.playerSlots/d.numPlayers, plural)
-	plural = ""
-	if d.remainderSlots > 1 {
-		plural = "s"
-	}
-	fmt.Printf("%d Player%s can play an extra fixture\n", d.remainderSlots, plural)
-	if d.fixtureSpacing {
-		fmt.Println("Autospacing is active")
-	}
-	noPlayPlayers := d.numPlayers - d.playerSlots
-	if noPlayPlayers > 0 {
-		plural = ""
-		if noPlayPlayers > 1 {
-			plural = "s"
+// checkPlayTogether checks to see if any pair of players has played together in more than
+// maxPlayerTogether fixtures
+func (d *Distributor) checkPlayTogether() bool {
+	pairs := make(map[[2]int]int)
+	for f := 0; f < d.numFixtures; f++ {
+		fixture := mat.Row(nil, f, d.matrix)
+		var players []int
+		for i := 0; i < d.numPlayers; i++ {
+			if fixture[i] == 1 {
+				players = append(players, i)
+			}
 		}
-		fmt.Printf("Warning: %d player%s will not play\n", noPlayPlayers, plural)
+		for i := 0; i < len(players); i++ {
+			for j := i + 1; j < len(players); j++ {
+				pair := [2]int{players[i], players[j]}
+				pairs[pair]++
+				if pairs[pair] > d.maxPlayerTogether {
+					return true
+				}
+			}
+		}
 	}
+	return false
 }
 
-// cantFill returns true if iteration cannot fill the matrix with players
+// cantFill returns true if iteration cannot fill the matrix with players for a fixture because there are too few
+// players available with less than the required number of playing slots
 func (d *Distributor) cantFill(filled int) bool {
 	return d.numPlayers-filled < d.playersPerFixture
 }
@@ -200,6 +243,8 @@ func (d *Distributor) getFilled(playerFixtures map[int]int) int {
 	return filled
 }
 
+// pickPlayer attempts to pick the player for a fixture. It returns -1 if not possible
+// It does this by looking for the first player that has less than the minimum number of fixtures
 func (d *Distributor) pickPlayer(currFixture int, playerFixtures map[int]int, playerBlock map[int]bool) int {
 	for k, played := range playerFixtures {
 		if played < d.playerMustPlay && !d.isInFixture(k, currFixture) && !playerBlock[k] {
@@ -222,6 +267,7 @@ func (d *Distributor) genRandPlayer(currFixture int, playerFixtures map[int]int,
 	}
 }
 
+// isInFixture returns true if a player is already in a fixture
 func (d *Distributor) isInFixture(player, fixture int) bool {
 	fix := mat.Row(nil, fixture, d.matrix)
 	if fix[player] == 1 {
@@ -230,15 +276,8 @@ func (d *Distributor) isInFixture(player, fixture int) bool {
 	return false
 }
 
-func (d *Distributor) Print(footer string) {
-	t := mat.Transpose{Matrix: d.matrix}
-	fa := mat.Formatted(t, mat.Prefix("         "), mat.Squeeze())
-	println("Columns are fixtures, Rows are Players")
-	fmt.Printf("Result = %v\n", fa)
-	println(footer, "\n")
-}
-
-func (d *Distributor) DoRecovery() {
+// doRecovery is the panic recovery mechanism for Distribute()
+func (d *Distributor) doRecovery() {
 	if r := recover(); r != nil {
 		if err, ok := r.(error); ok {
 			//recover returned some error, so log it
@@ -250,4 +289,14 @@ func (d *Distributor) DoRecovery() {
 		fmt.Printf("Debug: Current Fixture: %d, Current Player: %d\n", d.debugCurrFixture, d.debugCurrPlayer)
 		fmt.Printf("Stack Trace: %s", string(debug.Stack()))
 	}
+}
+
+// checkMinPlays checks that all players are playing the Must Play figure at least
+func (d *Distributor) checkMinPlays(fixtures map[int]int) bool {
+	for _, plays := range fixtures {
+		if plays < d.playerMustPlay {
+			return true
+		}
+	}
+	return false
 }
