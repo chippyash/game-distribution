@@ -34,7 +34,7 @@ func init() {
 		AddArgument("playersPerFixture", "Players per fixture: int", "").
 		AddArgument("maxPlayersTogether", "Max number of fixtures any two players may share: int. Raised to the minimum possible (average number of shared fixtures per pair, rounded up) if lower", "1").
 		AddFlag("attempts,a", fmt.Sprintf("Number of attempts to be made (%d - %d): int", MinAllowedAttempts, MaxAllowedAttempts), commando.Int, MinAllowedAttempts).
-		AddFlag("fixtureSpacing,s", "If true, the fixtures will be spaced evenly for each player", commando.Bool, true).
+		AddFlag("fixtureSpacing,s", "If true, the fixtures will be spaced evenly for each player", commando.Bool, false).
 		AddFlag("transpose,t", "If true, the resultant distribution matrix will be cols==players, rows==players", commando.Bool, false).
 		AddFlag("csv,c", "If true, save a csv file of the distribution to distribution.csv", commando.Bool, false).
 		SetAction(cmd())
@@ -67,7 +67,6 @@ func cmd() cmdFunc {
 			println("fixtureSpacing must be a boolean")
 			return
 		}
-		fixtureSpacing = !fixtureSpacing //invert so default is true
 
 		attempts, err := flags["attempts"].GetInt()
 		if err != nil {
@@ -111,6 +110,7 @@ func cmd() cmdFunc {
 			MaxPlayersTogether       int
 			RequestedPlayersTogether int
 			Autospacing              bool
+			SpacingLimited           bool
 			ActAttempts              int
 			MaxAttempts              int
 			Layout                   string
@@ -124,7 +124,8 @@ func cmd() cmdFunc {
 			Remainder:                dist.RemainderSlots(),
 			MaxPlayersTogether:       dist.MaxPlayersTogether(),
 			RequestedPlayersTogether: maxPlayersTogether,
-			Autospacing:              fixtureSpacing,
+			Autospacing:              dist.FixtureSpacing(),
+			SpacingLimited:           fixtureSpacing && !dist.CanFullySpace(),
 			ActAttempts:              dist.Attempts() + 1,
 			MaxAttempts:              attempts,
 			Layout:                   layoutExplanation,
@@ -134,7 +135,7 @@ func cmd() cmdFunc {
 Players: {{ .Players }}, Fixtures: {{ .Fixtures }}, Players per fixture: {{ .PlayersPerFixture }}
 Players must play: {{ .MustPlay }} fixtures
 {{ .Remainder }} Players will play an extra fixture
-Autospacing is {{ .Autospacing }}
+Autospacing is {{ .Autospacing }}{{ if .SpacingLimited }} (back-to-back fixtures cannot be fully avoided: fewer than twice as many players as players per fixture){{ end }}
 Max Play Together = {{ .MaxPlayersTogether }}{{ if ne .MaxPlayersTogether .RequestedPlayersTogether }} (requested {{ .RequestedPlayersTogether }} is below the minimum possible for these settings){{ end }}
 {{ .Layout }}
 Result = 

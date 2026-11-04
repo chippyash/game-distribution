@@ -35,7 +35,7 @@ func NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPla
 		playerMustPlay:    numFixtures * playersPerFixture / numPlayers,
 		remainderSlots:    numFixtures * playersPerFixture % numPlayers,
 		attempts:          attempts,
-		fixtureSpacing:    fixtureSpacing && numFixtures/numPlayers > 1,
+		fixtureSpacing:    fixtureSpacing,
 		maxPlayerTogether: maxPlayerTogether,
 		minPlayTogether:   minimumPlayTogether(numFixtures, numPlayers, playersPerFixture),
 		minSameTeam:       int(math.Ceil(float64(numPlayers) / (float64(numFixtures) / float64(playersPerFixture)))),
@@ -64,6 +64,17 @@ func minimumPlayTogether(numFixtures, numPlayers, playersPerFixture int) int {
 // possible for the given settings if it was lower
 func (d *Distributor) MaxPlayersTogether() int {
 	return d.maxPlayerTogether
+}
+
+// FixtureSpacing returns whether fixture spacing was requested, so that the fixtures are spaced evenly for each player
+func (d *Distributor) FixtureSpacing() bool {
+	return d.fixtureSpacing
+}
+
+// CanFullySpace returns true if no player needs to play in consecutive fixtures to fill every fixture. This requires at
+// least twice as many players as there are players per fixture. When it is false, spacing is still applied where possible
+func (d *Distributor) CanFullySpace() bool {
+	return d.numPlayers >= 2*d.playersPerFixture
 }
 
 // Matrix returns the matrix that will be populated with the distribution
@@ -147,11 +158,6 @@ START:
 						playable++
 					}
 				}
-				if playable-playerBlockCount < d.playersPerFixture {
-					//cancel the block
-					d.fixtureSpacing = false
-					playerBlock = make(map[int]bool, d.numPlayers)
-				}
 			}
 		}
 		for j := 0; j < d.playersPerFixture; j++ {
@@ -161,12 +167,7 @@ START:
 				d.playerMustPlay++
 				filled = d.getFilled(playerFixtures)
 			}
-			var currentPlayer int
-			if d.cantFill(filled) {
-				currentPlayer = d.pickPlayer(currFixture, playerFixtures, playerBlock)
-			} else {
-				currentPlayer = d.genRandPlayer(currFixture, playerFixtures, playerBlock)
-			}
+			currentPlayer := d.choosePlayer(currFixture, playerFixtures, playerBlock)
 			d.debugCurrPlayer = currentPlayer
 			if currentPlayer == -1 {
 				//we can't allocate a player to this fixture
@@ -226,12 +227,6 @@ func (d *Distributor) checkPlayTogether() bool {
 	return false
 }
 
-// cantFill returns true if iteration cannot fill the matrix with players for a fixture because there are too few
-// players available with less than the required number of playing slots
-func (d *Distributor) cantFill(filled int) bool {
-	return d.numPlayers-filled < d.playersPerFixture
-}
-
 // getFilled returns the number of players who have filled all their 'must play' slots
 func (d *Distributor) getFilled(playerFixtures map[int]int) int {
 	var filled int
@@ -243,28 +238,30 @@ func (d *Distributor) getFilled(playerFixtures map[int]int) int {
 	return filled
 }
 
-// pickPlayer attempts to pick the player for a fixture. It returns -1 if not possible
-// It does this by looking for the first player that has less than the minimum number of fixtures
-func (d *Distributor) pickPlayer(currFixture int, playerFixtures map[int]int, playerBlock map[int]bool) int {
-	for k, played := range playerFixtures {
-		if played < d.playerMustPlay && !d.isInFixture(k, currFixture) && !playerBlock[k] {
-			playerFixtures[k]++
-			return k
+// choosePlayer picks a random player for a fixture from those who still have must-play slots and are not already in
+// the fixture. Players blocked by fixture spacing are avoided when possible, but are used rather than failing the
+// attempt. It returns -1 if no player is available
+func (d *Distributor) choosePlayer(currFixture int, playerFixtures map[int]int, playerBlock map[int]bool) int {
+	var preferred, eligible []int
+	for k := 0; k < d.numPlayers; k++ {
+		if playerFixtures[k] >= d.playerMustPlay || d.isInFixture(k, currFixture) {
+			continue
+		}
+		eligible = append(eligible, k)
+		if !playerBlock[k] {
+			preferred = append(preferred, k)
 		}
 	}
-	return -1
-}
-
-// genRandPlayer generates a random player for a given number of players per fixture taking into account the number of
-// fixtures each player has been allocated to
-func (d *Distributor) genRandPlayer(currFixture int, playerFixtures map[int]int, playerBlock map[int]bool) int {
-	for {
-		player := rand.Intn(d.numPlayers)
-		if playerFixtures[player] < d.playerMustPlay && !d.isInFixture(player, currFixture) && !playerBlock[player] {
-			playerFixtures[player]++
-			return player
-		}
+	pool := preferred
+	if len(pool) == 0 {
+		pool = eligible
 	}
+	if len(pool) == 0 {
+		return -1
+	}
+	player := pool[rand.Intn(len(pool))]
+	playerFixtures[player]++
+	return player
 }
 
 // isInFixture returns true if a player is already in a fixture

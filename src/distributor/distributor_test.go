@@ -100,13 +100,13 @@ func TestDistributeProducesValidDistributions(t *testing.T) {
 		spacing                   bool
 	}{
 		{"lawn bowls 24/7/3", 24, 7, 3, 1, false},
-		{"lawn bowls 24/7/3 spaced", 24, 7, 3, 1, true},
+		{"lawn bowls 24/7/3 spaced", 24, 7, 3, 5, true},
 		{"17 fixtures 5 players", 17, 5, 3, 1, false},
 		{"17 fixtures 5 players spaced", 17, 5, 3, 6, true},
 		{"7 fixtures 5 players spaced", 7, 5, 3, 2, true},
 		{"10 fixtures 4 players", 10, 4, 2, 3, false},
 		{"9 fixtures 6 players", 9, 6, 3, 3, false},
-		{"9 fixtures 6 players spaced", 9, 6, 3, 3, true},
+		{"9 fixtures 6 players spaced", 9, 6, 3, 5, true},
 		{"one player per fixture", 5, 4, 1, 1, false},
 		{"fewer fixtures than players", 3, 7, 2, 1, false},
 		{"every player in every fixture", 2, 2, 2, 1, false},

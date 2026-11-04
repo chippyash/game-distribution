@@ -72,6 +72,18 @@ A combination of the -a flag and the maxPlayersTogether parameter will work unde
 combinations of these, you still don't get a permutation, then the answer is that you have asked for something impossible
 (for example, more fixtures than the player pool can cover without repeats that exceed the limit).
 
+#### Fixture spacing
+The -s flag spreads each player's fixtures out so that they are not in back-to-back fixtures. It is off by default.
+Spacing is a preference, not a guarantee: the program avoids back-to-back fixtures where it can, but some may remain.
+If there are fewer than twice as many players as players per fixture, back-to-back fixtures cannot be fully avoided, and the
+output says so.
+
+**Spacing can conflict with the play-together limit.** The automatic raise of `maxPlayersTogether` described above does not
+take spacing into account, so with -s the raised limit may not be enough. For example, `gamedist 24 7 3 -s` raises the limit
+to 4. At that limit the search is unreliable: in testing it failed in most runs even with 100000 attempts, and succeeded
+in others. Setting the limit to 5 succeeded reliably: `gamedist 24 7 3 5 -s`. If you get `too many attempts` with -s, raise `maxPlayersTogether` manually, one step at a time,
+until it works. The "Max Play Together" line in the output shows the limit that was used.
+
 #### Transposition
 By default the program outputs a permutation where rows are players and columns are fixtures. 
 ```
