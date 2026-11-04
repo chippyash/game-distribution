@@ -28,6 +28,7 @@ func TestGridAt100FixturesBy50Players(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 	u := newUI(a, "test")
+	defer u.splash.finish()
 
 	u.fixtures.SetText("100")
 	u.players.SetText("50")

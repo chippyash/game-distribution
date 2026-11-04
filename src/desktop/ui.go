@@ -41,6 +41,9 @@ type ui struct {
 	inputs                                               []fyne.Disableable
 	spacing, transpose                                   *widget.Check
 	start, cancel, save                                  *widget.Button
+	about                                                *widget.Button
+	splash                                               *splashScreen
+	splashing                                            bool
 	spinner                                              *widget.ProgressBarInfinite
 	status, panel                                        *widget.Label
 	table                                                *widget.Table
@@ -79,7 +82,7 @@ func newUI(a fyne.App, version string) *ui {
 	u.cancel.Disable()
 	u.save = widget.NewButton("Save CSV", u.onSave)
 	u.save.Disable()
-	about := widget.NewButton("About", u.onAbout)
+	u.about = widget.NewButton("About", u.onAbout)
 
 	u.spinner = widget.NewProgressBarInfinite()
 	u.spinner.Hide()
@@ -103,12 +106,16 @@ func newUI(a fyne.App, version string) *ui {
 		container.NewGridWithColumns(2, u.start, u.cancel),
 		u.spinner,
 		u.status,
-		container.NewGridWithColumns(2, u.save, about),
+		container.NewGridWithColumns(2, u.save, u.about),
 	)
 	panel := container.New(layout.NewGridWrapLayout(fyne.NewSize(600, 140)), container.NewVScroll(u.panel))
-	u.win.SetContent(container.NewBorder(nil, panel, controls, nil, u.table))
+	main := container.NewBorder(nil, panel, controls, nil, u.table)
+	u.splashing = true
+	u.splash = newSplashScreen(version, u.splashDone)
+	u.win.SetContent(container.NewStack(main, u.splash.layer))
 
 	u.updateButtons()
+	u.splash.start()
 	return u
 }
 
@@ -177,6 +184,16 @@ func (u *ui) transposeChanged() {
 // updateButtons sets which buttons and inputs can be used for the current state
 func (u *ui) updateButtons() {
 	_, errs := u.settings()
+	if u.splashing {
+		for _, in := range u.inputs {
+			in.Disable()
+		}
+		u.start.Disable()
+		u.save.Disable()
+		u.about.Disable()
+		return
+	}
+	u.about.Enable()
 	if u.running || len(errs) > 0 {
 		u.start.Disable()
 	} else {
@@ -194,6 +211,12 @@ func (u *ui) updateButtons() {
 			in.Enable()
 		}
 	}
+}
+
+// splashDone runs when the splash has faded out, and the controls can be used
+func (u *ui) splashDone() {
+	u.splashing = false
+	u.updateButtons()
 }
 
 // setRunning shows or hides the progress indicator and cancel button, and enables or disables the inputs

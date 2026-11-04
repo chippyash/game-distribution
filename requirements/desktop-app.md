@@ -44,6 +44,7 @@ should make the same capability available to users who do not want to use a term
   disables Save until the next run, so a saved file never disagrees with the inputs on screen
 - An About dialog shows the app version and the FSL-1.1 notice
 - The window shows `src/desktop/resources/icon-linux.jpeg` as its icon
+- When the app opens, `src/desktop/resources/splash.jpeg` is shown in the window, scaled to fit and centred. After 2 seconds it fades out over 3 seconds to reveal the main window. Input is blocked while the splash is showing, including during the fade. This happens on every launch.
 
 ## Non-Functional Requirements
 
@@ -53,6 +54,7 @@ should make the same capability available to users who do not want to use a term
 - Windows binary is cross-compiled from Linux with a MinGW-w64 cross-compiler, so that `make build` still produces both binaries
 - The Windows app hides the console window
 - The icon image is embedded in the binary at build time, so the app does not depend on the file's location when it runs. JPEG is accepted; no conversion is needed.
+- The splash image is embedded in the binary at build time, as the window icon is.
 - The Windows `.exe` has `src/desktop/resources/icon-windows.ico` as its file icon. The icon is compiled into the executable as a Windows resource, so the binary is self-contained.
 - Each binary embeds its own icon. The Linux binary embeds `icon-linux.jpeg` for its window icon. The Windows binary embeds `icon-windows.ico` for its file icon, and `icon-linux.jpeg` for its window icon.
 - Distribution method: binaries packaged into dist/gamedist.zip as gamedistapp (Linux) and gamedistapp.exe (Windows), alongside the CLI binaries

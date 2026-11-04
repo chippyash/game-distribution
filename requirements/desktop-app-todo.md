@@ -67,6 +67,9 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [x] **[Claude]** Embed `icon-windows.ico` in the Windows `.exe`. `src/desktop/resources/icon-windows.rc` is compiled to `src/desktop/icon_windows_amd64.syso` by `make desktop-icon`, which is ignored by git. The Windows build checked: the `.exe` has a `.rsrc` section.
 - [ ] **[You]** Check the icon on the Windows `.exe` in Explorer, and the window icon on Windows.
 - [x] **[You]** Decide whether the Windows `.exe` needs an icon as well. Decided: yes.
+- [x] **[Claude]** Splash screen: embed `resources/splash.jpeg` with `go:embed`. Show it scaled to fit and centred over the main window, then after 2 seconds fade it out over 3 seconds with a `canvas.Image` `Translucency` animation (`fyne.NewAnimation`), and remove it when the fade finishes. The JPEG is accepted; Fyne decodes it. Input is blocked while the splash is showing, including during the fade.
+- [x] **[Claude]** Test that the splash is removed after the fade, and that the controls are usable afterwards. `src/desktop/splash_test.go` checks the timings, the input lock, the fade values and the release of the controls. The splash code is in `src/desktop/splash.go`.
+- [ ] **[You]** Check the splash on Linux and Windows.
 - [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
 
 Decision made while writing `ui.go`: the input fields are disabled while a run is going, so the finished matrix always matches the settings shown on screen. The requirements didn't cover this. Tell me if you want the inputs to stay editable during a run.
