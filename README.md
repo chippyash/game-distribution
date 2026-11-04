@@ -145,6 +145,10 @@ The file uses these conventions, which you can change in your spreadsheet:
  - `1` means the player is selected for that fixture, and `0` means not selected. Replace these with any symbols you like.
  - The headings are `P1` to `Pn` for players and `F1` to `Fn` for fixtures. Replace them with human-readable labels, such as names and dates.
 
+## TODO
+
+ - [ ] Find someone willing to build this app on the Mac platform, as the author does not have a Mac and never will.
+
 ## License
 Copyright (c) 2026 Ashley Kitson, UK
 
