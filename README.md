@@ -135,6 +135,16 @@ players. e.g. `gamedist 24 7 3 -t`
 ⎢1  0  0  0  0  1  1⎥
 ⎣0  0  0  1  1  1  0⎦
 ```
+## Saving the distribution as CSV
+
+The CLI's `-c` flag and the desktop app's Save CSV button both save the distribution as a CSV file, in the same format. The CLI writes `distribution.csv` to the current folder. In the desktop app, the Save CSV button is enabled once a distribution has been generated, and opens a save dialog with the default file name `distribution.csv`.
+
+Without Transpose (`-t` in the CLI, or the Transpose option in the app), players are the rows and fixtures are the columns. With Transpose on, fixtures are the rows and players are the columns.
+
+The file uses these conventions, which you can change in your spreadsheet:
+ - `1` means the player is selected for that fixture, and `0` means not selected. Replace these with any symbols you like.
+ - The headings are `P1` to `Pn` for players and `F1` to `Fn` for fixtures. Replace them with human-readable labels, such as names and dates.
+
 ## License
 Copyright (c) 2026 Ashley Kitson, UK
 

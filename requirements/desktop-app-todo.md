@@ -62,7 +62,7 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [x] **[Claude]** Fix the pointer offset reported on the Wayland session: `main.go` asks GLFW for X11 (XWayland) before creating the window. A probe confirmed the X11 platform is selected.
 - [x] **[Claude]** Embed `resources/icon-linux.jpeg` with `go:embed` in `main.go`, and set it as the application icon with `a.SetIcon` before the window is created. JPEG is decoded by Fyne, so no conversion is needed.
 - [ ] **[Claude]** Test that the embedded icon is non-empty and decodes as an image.
-- [ ] **[You]** Check that the icon appears in the window title bar on Linux.
+- [X] **[You]** Check that the icon appears in the window title bar on Linux.
 - [x] **[Claude]** Create `src/desktop/resources/icon-windows.ico` from `icon-linux.jpeg`, with 16, 24, 32, 48, 64, 128 and 256 pixel sizes.
 - [x] **[Claude]** Embed `icon-windows.ico` in the Windows `.exe`. `src/desktop/resources/icon-windows.rc` is compiled to `src/desktop/icon_windows_amd64.syso` by `make desktop-icon`, which is ignored by git. The Windows build checked: the `.exe` has a `.rsrc` section.
 - [ ] **[You]** Check the icon on the Windows `.exe` in Explorer, and the window icon on Windows.
@@ -82,7 +82,7 @@ Application menu (in the window: Theme, About, Help; no keyboard shortcuts):
 - [x] **[Claude]** About dialog: replace the last line (the LICENSE reference) with a link to `https://github.com/chippyash/game-distribution/releases/tag/<version>`, where `<version>` is the `VERSION` value. The URL is built in `src/desktop/model/links.go`, with a test. The link is a Fyne hyperlink in the dialog.
 - [x] **[Claude]** Input labels: change "Fixtures" to "Num. of Fixture", "Players" to "Num. of Players" and "Attempts" to "Max. Attempts" in `src/desktop/ui.go`.
 - [x] **[Claude]** Reduce the space between the input fields, and hide each field's error message when it is empty, so the Save CSV button stays on screen.
-- [ ] **[You]** Check the menu, the theme dialog, the theme change and the Help link on Linux and Windows.
+- [X] **[You]** Check the menu, the theme dialog, the theme change and the Help link on Linux and Windows.
 - [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
 
 Decision made while writing `ui.go`: the input fields are disabled while a run is going, so the finished matrix always matches the settings shown on screen. The requirements didn't cover this. Tell me if you want the inputs to stay editable during a run.
