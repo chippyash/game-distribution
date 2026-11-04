@@ -80,6 +80,8 @@ Application menu (in the window: Theme, About, Help; no keyboard shortcuts):
 - [x] **[Claude]** Help: open `https://github.com/chippyash/game-distribution/blob/<version>/README.md` in the default browser, where `<version>` is the injected `VERSION` value. Put the URL builder in `src/desktop/model`, so it can be tested without the UI. If the browser can't be opened, show the error in a dialog.
 - [x] **[Claude]** Test the Help URL builder, the theme preference round trip (save, then read back), and the menu entries.
 - [x] **[Claude]** About dialog: replace the last line (the LICENSE reference) with a link to `https://github.com/chippyash/game-distribution/releases/tag/<version>`, where `<version>` is the `VERSION` value. The URL is built in `src/desktop/model/links.go`, with a test. The link is a Fyne hyperlink in the dialog.
+- [x] **[Claude]** Input labels: change "Fixtures" to "Num. of Fixture", "Players" to "Num. of Players" and "Attempts" to "Max. Attempts" in `src/desktop/ui.go`.
+- [x] **[Claude]** Reduce the space between the input fields, and hide each field's error message when it is empty, so the Save CSV button stays on screen.
 - [ ] **[You]** Check the menu, the theme dialog, the theme change and the Help link on Linux and Windows.
 - [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
 

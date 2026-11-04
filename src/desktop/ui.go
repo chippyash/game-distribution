@@ -65,6 +65,9 @@ func newWindow(a fyne.App, version string) fyne.Window {
 }
 
 // newUI builds the main window and returns the state behind it
+// inputSpacing is the gap in pixels between the input fields
+const inputSpacing = 2
+
 func newUI(a fyne.App, version string) *ui {
 	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}}
 	u.win.Resize(fyne.NewSize(1000, 700))
@@ -95,12 +98,12 @@ func newUI(a fyne.App, version string) *ui {
 
 	u.table = widget.NewTableWithHeaders(u.tableSize, u.tableCell, u.tableUpdate)
 
-	inputForm := container.NewVBox(
-		u.field("Fixtures", u.fixtures, model.FieldFixtures),
-		u.field("Players", u.players, model.FieldPlayers),
+	inputForm := container.New(layout.NewCustomPaddedVBoxLayout(inputSpacing),
+		u.field("Num. of Fixture", u.fixtures, model.FieldFixtures),
+		u.field("Num. of Players", u.players, model.FieldPlayers),
 		u.field("Players per fixture", u.perFixture, model.FieldPlayersPerFixture),
 		u.field("Max players together", u.maxTogether, model.FieldMaxPlayersTogether),
-		u.field("Attempts", u.attempts, model.FieldAttempts),
+		u.field("Max. Attempts", u.attempts, model.FieldAttempts),
 		u.spacing,
 		u.transpose,
 	)
@@ -141,8 +144,9 @@ func (u *ui) numberEntry(text, field, placeholder string) *widget.Entry {
 func (u *ui) field(label string, e *widget.Entry, field string) fyne.CanvasObject {
 	errLabel := widget.NewLabel("")
 	errLabel.Importance = widget.DangerImportance
+	errLabel.Hide()
 	u.fieldErrs[field] = errLabel
-	return container.NewVBox(widget.NewLabel(label), e, errLabel)
+	return container.New(layout.NewCustomPaddedVBoxLayout(0), widget.NewLabel(label), e, errLabel)
 }
 
 // settings reads the inputs. The returned errors include whole-number checks and the model's limits
@@ -175,6 +179,11 @@ func (u *ui) inputChanged() {
 	_, errs := u.settings()
 	for field, label := range u.fieldErrs {
 		label.SetText(errs[field])
+		if errs[field] == "" {
+			label.Hide()
+		} else {
+			label.Show()
+		}
 	}
 	if !u.running {
 		u.result = nil

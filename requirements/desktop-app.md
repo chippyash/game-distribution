@@ -14,7 +14,7 @@ should make the same capability available to users who do not want to use a term
 
 ## Functional Requirements
 
-- Inputs: number of fixtures, number of players, players per fixture (see `README.md`)
+- Inputs: number of fixtures, number of players, players per fixture (see `README.md`). The input labels are "Num. of Fixture", "Num. of Players", "Players per fixture", "Max players together" and "Max. Attempts".
 - Options matching the CLI: maximum players together, attempts, fixture spacing, transpose
 - The options start at the CLI defaults: attempts 1000, maximum players together 1, fixture spacing off, transpose off
 - Inputs are validated:
@@ -26,6 +26,7 @@ should make the same capability available to users who do not want to use a term
 - Output: Draw the matrix on screen with an option to download the result as a CSV file
 - The matrix shows `X` for a player in a fixture and a blank cell otherwise, with rows labelled `P1…` and columns labelled
   `F1…` as in the CSV
+- The input fields are spaced closely, and an error message is shown only when it has something to say, so that the Save CSV button stays on screen.
 - The on-screen grid scrolls in both directions. Players are the rows by default, as in the CLI.
 - The grid is tested at 100 fixtures and 50 players
 - A run executes in the background, because high attempt counts can take many seconds
