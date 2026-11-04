@@ -19,7 +19,7 @@ And provides you with a distribution matrix that you can optionally load into a 
 ## Installation
 
 ### All platforms
-Unzip the supplied gamedist.zip file to somewhere convenient
+Unzip the supplied `dist/gamedist.zip` file to somewhere convenient
 
 ### Linux
 Run the following commands
