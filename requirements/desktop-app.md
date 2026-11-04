@@ -26,6 +26,7 @@ should make the same capability available to users who do not want to use a term
 - Output: Draw the matrix on screen with an option to download the result as a CSV file
 - The matrix shows `X` for a player in a fixture and a blank cell otherwise, with rows labelled `P1…` and columns labelled
   `F1…` as in the CSV
+- Each input and its label show hover help. When the pointer rests on an input or its label for 1 second, a help card beside the input explains what the input is for. The help hides when the pointer leaves or the input is clicked, and does not show while the splash is showing. The help text is in `src/desktop/model/help.go`.
 - The input fields are spaced closely, and an error message is shown only when it has something to say, so that the Save CSV button stays on screen.
 - The on-screen grid scrolls in both directions. Players are the rows by default, as in the CLI.
 - The grid is tested at 100 fixtures and 50 players

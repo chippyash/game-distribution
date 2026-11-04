@@ -40,10 +40,12 @@ type ui struct {
 	menu    *fyne.MainMenu
 	version string
 
-	fixtures, players, perFixture, maxTogether, attempts *widget.Entry
+	fixtures, players, perFixture, maxTogether, attempts *helpEntry
 	fieldErrs                                            map[string]*widget.Label
+	form                                                 *fyne.Container
+	tip                                                  *helpTip
 	inputs                                               []fyne.Disableable
-	spacing, transpose                                   *widget.Check
+	spacing, transpose                                   *helpCheck
 	start, cancel, save                                  *widget.Button
 	splash                                               *splashScreen
 	splashing                                            bool
@@ -71,6 +73,7 @@ const inputSpacing = 2
 func newUI(a fyne.App, version string) *ui {
 	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}}
 	u.win.Resize(fyne.NewSize(1000, 700))
+	u.tip = newHelpTip(u.inputsActive)
 	applyTheme(a, model.ThemeFromPreference(a.Preferences().String(model.PrefTheme)))
 
 	u.fixtures = u.numberEntry("", model.FieldFixtures, "Fixtures")
@@ -80,8 +83,8 @@ func newUI(a fyne.App, version string) *ui {
 	u.maxTogether = u.numberEntry(strconv.Itoa(defaults.MaxPlayersTogether), model.FieldMaxPlayersTogether, "Max players together")
 	u.attempts = u.numberEntry(strconv.Itoa(defaults.Attempts), model.FieldAttempts, "Attempts")
 
-	u.spacing = widget.NewCheck("Fixture spacing (-s)", func(bool) { u.inputChanged() })
-	u.transpose = widget.NewCheck("Transpose (-t)", func(bool) { u.transposeChanged() })
+	u.spacing = newHelpCheck("Fixture spacing (-s)", model.InputHelp(model.FieldSpacing), func(bool) { u.inputChanged() }, u.tip)
+	u.transpose = newHelpCheck("Transpose (-t)", model.InputHelp(model.FieldTranspose), func(bool) { u.transposeChanged() }, u.tip)
 	u.inputs = []fyne.Disableable{u.fixtures, u.players, u.perFixture, u.maxTogether, u.attempts, u.spacing}
 
 	u.start = widget.NewButton("Start", u.onStart)
@@ -107,6 +110,7 @@ func newUI(a fyne.App, version string) *ui {
 		u.spacing,
 		u.transpose,
 	)
+	u.form = inputForm
 	controls := container.NewVBox(
 		inputForm,
 		container.NewGridWithColumns(2, u.start, u.cancel),
@@ -124,7 +128,7 @@ func newUI(a fyne.App, version string) *ui {
 	main := container.NewBorder(nil, panel, controls, nil, u.table)
 	u.splashing = true
 	u.splash = newSplashScreen(version, u.splashDone)
-	u.win.SetContent(container.NewStack(main, u.splash.layer))
+	u.win.SetContent(container.NewStack(main, u.splash.layer, u.tip.layer))
 
 	u.updateButtons()
 	u.splash.start()
@@ -132,8 +136,8 @@ func newUI(a fyne.App, version string) *ui {
 }
 
 // numberEntry creates an entry for a whole number. Changes are checked by inputChanged
-func (u *ui) numberEntry(text, field, placeholder string) *widget.Entry {
-	e := widget.NewEntry()
+func (u *ui) numberEntry(text, field, placeholder string) *helpEntry {
+	e := newHelpEntry(model.InputHelp(field), u.tip)
 	e.SetPlaceHolder(placeholder)
 	e.SetText(text)
 	e.OnChanged = func(string) { u.inputChanged() }
@@ -141,19 +145,19 @@ func (u *ui) numberEntry(text, field, placeholder string) *widget.Entry {
 }
 
 // field lays out a labelled input with a place for its validation message
-func (u *ui) field(label string, e *widget.Entry, field string) fyne.CanvasObject {
+func (u *ui) field(label string, e *helpEntry, field string) fyne.CanvasObject {
 	errLabel := widget.NewLabel("")
 	errLabel.Importance = widget.DangerImportance
 	errLabel.Hide()
 	u.fieldErrs[field] = errLabel
-	return container.New(layout.NewCustomPaddedVBoxLayout(0), widget.NewLabel(label), e, errLabel)
+	return container.New(layout.NewCustomPaddedVBoxLayout(0), newHelpLabel(label, model.InputHelp(field), u.tip), e, errLabel)
 }
 
 // settings reads the inputs. The returned errors include whole-number checks and the model's limits
 func (u *ui) settings() (model.Settings, model.FieldErrors) {
 	s := model.Settings{Spacing: u.spacing.Checked, Transpose: u.transpose.Checked}
 	errs := model.FieldErrors{}
-	read := func(e *widget.Entry, field string, dst *int) {
+	read := func(e *helpEntry, field string, dst *int) {
 		v, err := strconv.Atoi(strings.TrimSpace(e.Text))
 		if err != nil {
 			errs[field] = "must be a whole number"
@@ -184,6 +188,9 @@ func (u *ui) inputChanged() {
 		} else {
 			label.Show()
 		}
+	}
+	if u.win.Content() != nil {
+		u.win.Content().Refresh()
 	}
 	if !u.running {
 		u.result = nil
@@ -455,4 +462,9 @@ func (u *ui) onHelp() {
 	if err := u.app.OpenURL(link); err != nil {
 		dialog.ShowError(err, u.win)
 	}
+}
+
+// inputsActive reports whether the inputs can respond. They do not while the splash is showing
+func (u *ui) inputsActive() bool {
+	return !u.splashing
 }

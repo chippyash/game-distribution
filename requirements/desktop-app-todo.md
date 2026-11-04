@@ -65,11 +65,11 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [X] **[You]** Check that the icon appears in the window title bar on Linux.
 - [x] **[Claude]** Create `src/desktop/resources/icon-windows.ico` from `icon-linux.jpeg`, with 16, 24, 32, 48, 64, 128 and 256 pixel sizes.
 - [x] **[Claude]** Embed `icon-windows.ico` in the Windows `.exe`. `src/desktop/resources/icon-windows.rc` is compiled to `src/desktop/icon_windows_amd64.syso` by `make desktop-icon`, which is ignored by git. The Windows build checked: the `.exe` has a `.rsrc` section.
-- [ ] **[You]** Check the icon on the Windows `.exe` in Explorer, and the window icon on Windows.
+- [X] **[You]** Check the icon on the Windows `.exe` in Explorer, and the window icon on Windows.
 - [x] **[You]** Decide whether the Windows `.exe` needs an icon as well. Decided: yes.
 - [x] **[Claude]** Splash screen: embed `resources/splash.jpeg` with `go:embed`. Show it scaled to fit and centred over the main window, then after 2 seconds fade it out over 3 seconds with a `canvas.Image` `Translucency` animation (`fyne.NewAnimation`), and remove it when the fade finishes. The JPEG is accepted; Fyne decodes it. Input is blocked while the splash is showing, including during the fade.
 - [x] **[Claude]** Test that the splash is removed after the fade, and that the controls are usable afterwards. `src/desktop/splash_test.go` checks the timings, the input lock, the fade values and the release of the controls. The splash code is in `src/desktop/splash.go`.
-- [ ] **[You]** Check the splash on Linux and Windows.
+- [X] **[You]** Check the splash on Linux and Windows.
 
 Application menu (in the window: Theme, About, Help; no keyboard shortcuts):
 
@@ -82,6 +82,10 @@ Application menu (in the window: Theme, About, Help; no keyboard shortcuts):
 - [x] **[Claude]** About dialog: replace the last line (the LICENSE reference) with a link to `https://github.com/chippyash/game-distribution/releases/tag/<version>`, where `<version>` is the `VERSION` value. The URL is built in `src/desktop/model/links.go`, with a test. The link is a Fyne hyperlink in the dialog.
 - [x] **[Claude]** Input labels: change "Fixtures" to "Num. of Fixture", "Players" to "Num. of Players" and "Attempts" to "Max. Attempts" in `src/desktop/ui.go`.
 - [x] **[Claude]** Reduce the space between the input fields, and hide each field's error message when it is empty, so the Save CSV button stays on screen.
+- [x] **[Claude]** Hover help text for each input in `src/desktop/model/help.go`, with a test that every input has one.
+- [x] **[Claude]** Hover help widgets in `src/desktop/hover.go`: a 1-second hover delay, a help card inside the window (not an overlay, which would take the keyboard from the inputs), placed beside the input and hidden when the pointer leaves or the input is clicked, and no popup while the splash is showing. Labels and entries are wrapped directly. Check boxes are held in a holder widget, because wrapping `widget.Check` directly loses its icon.
+- [x] **[Claude]** Tests for the hover delay, hiding on leave, the splash lock and the help text on every input (`src/desktop/hover_test.go`).
+- [X] **[You]** Check the hover help on Linux and Windows: each input and label, the 1-second delay, and that it hides when the pointer leaves.
 - [X] **[You]** Check the menu, the theme dialog, the theme change and the Help link on Linux and Windows.
 - [x] **[You]** Run the app on Linux and check the pointer position, layout, spinner, cancel, and the save dialog. I can't see the GUI from here.
 
