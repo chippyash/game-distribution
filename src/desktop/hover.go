@@ -24,6 +24,10 @@ import (
 // hoverDelay is how long the pointer must rest on an input before its help appears
 const hoverDelay = 1 * time.Second
 
+// hideGrace is how long the help stays after the pointer seems to leave. Some systems, Wine among them, send a leave
+// straight after an enter, so a leave is only acted on once it has lasted this long
+const hideGrace = 300 * time.Millisecond
+
 const (
 	tipGap        = 8   // gap between an input and its help
 	tipWidth      = 300 // width of the help in pixels
@@ -38,6 +42,7 @@ type helpTip struct {
 	card    *widget.Card
 	label   *widget.Label
 	enabled func() bool
+	owner   fyne.CanvasObject
 }
 
 func newHelpTip(enabled func() bool) *helpTip {
@@ -55,6 +60,7 @@ func newHelpTip(enabled func() bool) *helpTip {
 
 // show places the help beside the owner, inside the window content, and shows it
 func (t *helpTip) show(owner fyne.CanvasObject, text string) {
+	t.owner = owner
 	drv := fyne.CurrentApp().Driver()
 	at := drv.AbsolutePositionForObject(owner)
 	base := drv.AbsolutePositionForObject(t.layer)
@@ -72,10 +78,15 @@ func (t *helpTip) show(owner fyne.CanvasObject, text string) {
 	t.card.Resize(size)
 	t.card.Move(fyne.NewPos(x, y))
 	t.card.Show()
+	// the card sits in a layer that does not re-lay itself out, so ask for a repaint
+	t.card.Refresh()
+	t.layer.Refresh()
 }
 
 func (t *helpTip) hide() {
+	t.owner = nil
 	t.card.Hide()
+	t.layer.Refresh()
 }
 
 // tipSize returns a size that fits the help text on wrapped lines
@@ -86,36 +97,68 @@ func tipSize(text string) fyne.Size {
 
 // hoverHelp shows an input's help after the pointer has rested on it for hoverDelay, and hides it when the pointer leaves
 type hoverHelp struct {
-	owner  fyne.CanvasObject
-	text   string
-	tip    *helpTip
-	active bool
-	timer  *time.Timer
+	owner     fyne.CanvasObject
+	text      string
+	tip       *helpTip
+	active    bool
+	timer     *time.Timer
+	hideTimer *time.Timer
 }
 
+// enter is called when the pointer comes onto the input. A timer shows the help if the pointer stays
 func (h *hoverHelp) enter() {
 	h.active = true
-	h.stop()
-	h.timer = time.AfterFunc(hoverDelay, func() {
-		fyne.Do(h.show)
+	h.stopHide()
+	if h.timer == nil && h.tip.owner != h.owner {
+		h.timer = time.AfterFunc(hoverDelay, func() {
+			fyne.Do(h.show)
+		})
+	}
+}
+
+// leave is called when the pointer seems to leave the input. The help goes only if the pointer stays away for hideGrace
+func (h *hoverHelp) leave() {
+	h.active = false
+	if h.tip.owner != h.owner {
+		return
+	}
+	h.stopHide()
+	h.hideTimer = time.AfterFunc(hideGrace, func() {
+		fyne.Do(func() {
+			if !h.active && h.tip.owner == h.owner {
+				h.tip.hide()
+			}
+		})
 	})
 }
 
-func (h *hoverHelp) leave() {
+// dismiss hides the help at once, for example when the input is clicked
+func (h *hoverHelp) dismiss() {
 	h.active = false
-	h.stop()
-	h.tip.hide()
+	h.stopTimer()
+	h.stopHide()
+	if h.tip.owner == h.owner {
+		h.tip.hide()
+	}
 }
 
-func (h *hoverHelp) stop() {
+func (h *hoverHelp) stopTimer() {
 	if h.timer != nil {
 		h.timer.Stop()
 		h.timer = nil
 	}
 }
 
+func (h *hoverHelp) stopHide() {
+	if h.hideTimer != nil {
+		h.hideTimer.Stop()
+		h.hideTimer = nil
+	}
+}
+
 // show displays the help if the pointer is still on the input and the window accepts input
 func (h *hoverHelp) show() {
+	h.timer = nil
 	if !h.active || !h.tip.enabled() {
 		return
 	}
@@ -162,7 +205,7 @@ func (e *helpEntry) MouseOut()                      { e.help.leave() }
 
 // MouseDown hides the help before the entry takes focus
 func (e *helpEntry) MouseDown(ev *desktop.MouseEvent) {
-	e.help.leave()
+	e.help.dismiss()
 	e.Entry.MouseDown(ev)
 }
 
@@ -197,6 +240,6 @@ func (c *helpCheck) MouseOut() {
 
 // Tapped hides the help before the check box changes
 func (c *helpCheck) Tapped(e *fyne.PointEvent) {
-	c.help.leave()
+	c.help.dismiss()
 	c.Check.Tapped(e)
 }

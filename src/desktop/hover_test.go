@@ -46,13 +46,24 @@ func TestHoverHelpWaitsForDelayAndHidesOnLeave(t *testing.T) {
 		t.Fatalf("help not shown while hovering")
 	}
 
+	// a leave waits for the grace period, so a quick re-enter keeps the help showing
 	u.fixtures.MouseOut()
+	if u.fixtures.help.active || u.fixtures.help.hideTimer == nil {
+		t.Fatalf("leave did not start the grace period")
+	}
+	u.fixtures.MouseIn(hoverAt(20, 20))
+	if !u.fixtures.help.active || u.fixtures.help.hideTimer != nil {
+		t.Errorf("re-entering during the grace period did not cancel the hide")
+	}
+
+	// a click hides the help at once
+	u.fixtures.MouseDown(&desktop.MouseEvent{})
 	if u.tip.card.Visible() || u.fixtures.help.active {
-		t.Errorf("help still showing after the pointer left")
+		t.Errorf("help still showing after the input was clicked")
 	}
 	u.fixtures.help.show()
 	if u.tip.card.Visible() {
-		t.Errorf("help shown after the pointer left")
+		t.Errorf("help shown after the input was clicked with the pointer gone")
 	}
 }
 
