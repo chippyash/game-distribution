@@ -59,11 +59,14 @@ attempts to do this.  If you consistently do not get an answer, you can increase
 `gamedist 24 7 3 -c -a 10000`. The max number of allowable attempts is 100000.
 #### Max Play Together
 The program will try as far as possible to ensure that no two players share more than `maxPlayersTogether` fixtures. By default
-this is 1, so players won't play together more than once. It's not always possible, so the program raises the limit to the
-lowest value that can work: the average number of fixtures each pair of players shares, rounded up. For example,
+this is 1, so players won't play together more than once. If that is impossible, the program raises the limit to the
+lowest value it could possibly meet: the average number of fixtures each pair of players shares, rounded up. Meeting that
+minimum is not guaranteed, though. The program can still fail to find a permutation at the minimum, especially with
+many players or with fixture spacing on, so you may need to raise the limit further. For example,
 `gamedist 24 7 3 -a 10000` shares 72 pair-appearances across 21 pairs, so the limit is raised to 4 and the output tells you so.
 If you consistently do not get an answer, you can increase the limit with the 4th parameter (maxPlayersTogether), e.g.
-`gamedist 24 7 3 5 -c`. The limit can't be set below the minimum, so a lower value is simply raised to it.
+`gamedist 24 7 3 5 -c`. The limit can't be set below the minimum, so a lower value is simply raised to it. A failure at the minimum
+means only that no permutation was found within the attempts, not that none exists.
 
 A combination of the -a flag and the maxPlayersTogether parameter will work under most circumstance. If after trying out 
 combinations of these, you still don't get a permutation, then the answer is that you have asked for something impossible
