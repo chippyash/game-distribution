@@ -12,7 +12,6 @@ package main
 
 import (
 	"context"
-	_ "embed"
 	"encoding/csv"
 	"fmt"
 	"github.com/chippyash/gamedistributor/src/distributor"
@@ -28,8 +27,8 @@ const (
 	MinAllowedAttempts = 1000
 )
 
-//go:embed VERSION
-var version string
+// version is set at build time with -ldflags "-X main.version=<VERSION>"
+var version = "dev"
 
 type cmdFunc func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue)
 

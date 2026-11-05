@@ -23,8 +23,8 @@ build: clean build-gamedist build-desktop ## Build the binaries
 
 .PHONY: build-gamedist
 build-gamedist:
-	env GOOS=linux go build -ldflags="-s -w" -o bin/gamedist src/cli/gamedist-cli.go
-	env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o bin/gamedist.exe src/cli/gamedist-cli.go
+	env GOOS=linux go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/gamedist src/cli/gamedist-cli.go
+	env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/gamedist.exe src/cli/gamedist-cli.go
 	zip -9 -j dist/gamedist.zip bin/gamedist bin/gamedist.exe README.md
 
 .PHONY: desktop-icon
