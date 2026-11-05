@@ -55,8 +55,8 @@ Status: Phases 0 to 3 are complete in the working tree, and nothing is committed
 
 ## Phase 5: Releasing guide
 
-- [ ] **[Claude]** Write `docs/releasing.md` from `.github/workflows/fsl-release.yml`, the Makefile and the `VERSION` file. Include the test tags, draft releases, cleaning up test releases, and that release notes are written on the GitHub release.
-- [ ] **[Claude]** Check that every step in `docs/releasing.md` is one the workflow actually runs.
+- [x] **[Claude]** Write `docs/releasing.md` from `.github/workflows/fsl-release.yml`, the Makefile and the `VERSION` file. Include the test tags, draft releases, cleaning up test releases, and that release notes are written on the GitHub release.
+- [x] **[Claude]** Check that every step in `docs/releasing.md` is one the workflow actually runs. The manual steps (tagging, publishing, deleting test releases) are marked as manual. The Makefile's old `version` and `push` targets were removed, along with the variables only they used, and the guide no longer mentions them.
 - [ ] **[You]** Confirm the release steps you follow match the guide.
 
 ## Phase 6: Link and finish
