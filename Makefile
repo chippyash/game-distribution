@@ -1,15 +1,4 @@
 VERSION=`cat VERSION`
-LASTBRANCH=$(git log --branches | grep 'Merged in.*' | head -1)
-LASTCOMMIT=$(git log --no-decorate | grep "commit.*" | head -1)
-BRANCH := $(shell echo "$(GIT_BRANCH)" | sed 's/^.\{7\}//')
-TAGGING:=$(BRANCH) | git push --tags
-ifeq ($(BRANCH), master)
-	VERTYPE=patch
-	VERSIONTAG=$(TAGGING)
-else
-	VERTYPE=feature
-	VERSIONTAG=$(BRANCH)
-endif
 
 current_dir:=$(shell pwd)
 test_output:=$(current_dir)/tests/_output
@@ -36,21 +25,6 @@ build-desktop: desktop-icon ## Build the desktop app binaries
 	env GOOS=linux CGO_ENABLED=1 go build -tags desktop -ldflags="-s -w -X main.version=$(VERSION)" -o bin/gamedistapp ./src/desktop/
 	env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go build -tags desktop -ldflags="-s -w -H=windowsgui -X main.version=$(VERSION)" -o bin/gamedistapp.exe ./src/desktop/
 	zip -9 -j dist/gamedist.zip bin/gamedistapp bin/gamedistapp.exe
-
-.PHONY: version
-version:
-	# Don't update version if we're on a dev branch
-	if [ "${GIT_BRANCH}" = "origin/master" ]; then \
-		vupdate -p$(VERTYPE); \
-	fi
-
-.PHONY: push
-push:
-	if [ "${GIT_BRANCH}" = "origin/master" ]; then \
-		git commit -am"CD $(VERTYPE) version update for: $(LASTCOMMIT) $(LASTBRANCH)"; \
-		echo "v$(VERSION)" | xargs git tag; \
-		git push origin HEAD:$(VERSIONTAG); \
-	fi
 
 .PHONY: clean
 clean: ## Clean up the bin and dist directories
