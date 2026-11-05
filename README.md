@@ -22,7 +22,7 @@ And provides you with a distribution matrix that you can optionally load into a 
 ## Installation
 
 ### All platforms
-Download the release package (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
+Download the release archive (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
 convenient, e.g. `tar -xzf dist-<version>.tar.gz -C <somewhereconvenient>`. The package contains the binaries for each
 platform, so use the one for yours:
  - Linux: `gamedist` (CLI) and `gamedistapp` (desktop app)
@@ -37,7 +37,7 @@ are good choices
    - NB - you may need to prefix the last command with `sudo` depending on your target
  - type `gamedist help` to ensure you have installed correctly
  - to use the desktop app, move `<somewhereconvenient>/gamedistapp` to the same place and run `gamedistapp`. It needs OpenGL, Wayland and X11 libraries. On Debian and Ubuntu, install them with `sudo apt install libgl1 libwayland-client0 libx11-6`. The release build runs on Ubuntu 22.04 and later, and Debian 12 and later.
- - remove the extract directory and release package to clean up 
+ - remove the extract directory and release archive to clean up 
    - `rm dist-<version>.tar.gz`
    - `rm -rf <somewhereconvenient>`  
    - Do take care that you are targeting correctly! Else use your graphical file manager
@@ -53,7 +53,7 @@ are good choices
  - Open a Cmd terminal
  - Type `gamedist.exe help` to ensure you have installed correctly
  - to use the desktop app, move `gamedistapp.exe` to the same folder and double-click it
- - remove the extract directory and release package to clean up. You may want to keep the readme file somewhere for later reference.
+ - remove the extract directory and release archive to clean up. You may want to keep the readme file somewhere for later reference.
 
 ## Building from source
 
@@ -147,7 +147,7 @@ players. e.g. `gamedist 24 7 3 -t`
 ## Desktop app
 
 The desktop app does the same job as the CLI, in a window. It is `gamedistapp` on Linux and `gamedistapp.exe` on Windows,
-and both are in the release package alongside the CLI. Run `gamedistapp` (Linux) or double-click `gamedistapp.exe` (Windows).
+and both are in the release archive alongside the CLI. Run `gamedistapp` (Linux) or double-click `gamedistapp.exe` (Windows).
 
 The [desktop app guide](https://github.com/chippyash/game-distribution/blob/master/docs/desktop-app.md) covers the inputs, running and cancelling a distribution, reading and
 saving the results, the menu and the hover help.
