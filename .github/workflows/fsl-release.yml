@@ -20,6 +20,11 @@ jobs:
         with:
           go-version: 'stable'
 
+      - name: Install desktop app build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev gcc-mingw-w64-x86-64
+
       - name: Calculate FSL Licensing Dates
         id: dates
         run: |
