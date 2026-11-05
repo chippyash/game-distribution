@@ -25,8 +25,8 @@ And provides you with a distribution matrix that you can optionally load into a 
 Download the release package (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
 convenient, e.g. `tar -xzf dist-<version>.tar.gz -C <somewhereconvenient>`. The package contains the binaries for each
 platform, so use the one for yours:
- - Linux: `gamedist`
- - Windows: `gamedist.exe`
+ - Linux: `gamedist` (CLI) and `gamedistapp` (desktop app)
+ - Windows: `gamedist.exe` (CLI) and `gamedistapp.exe` (desktop app)
 
 ### Linux
 Run the following commands
@@ -36,6 +36,7 @@ are good choices
  - move the `<somewhereconvenient>/gamedist` file to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
    - NB - you may need to prefix the last command with `sudo` depending on your target
  - type `gamedist help` to ensure you have installed correctly
+ - to use the desktop app, move `<somewhereconvenient>/gamedistapp` to the same place and run `gamedistapp`. It needs OpenGL, Wayland and X11 libraries. On Debian and Ubuntu, install them with `sudo apt install libgl1 libwayland-client0 libx11-6`. The release build runs on Ubuntu 22.04 and later, and Debian 12 and later.
  - remove the extract directory and release package to clean up 
    - `rm dist-<version>.tar.gz`
    - `rm -rf <somewhereconvenient>`  
@@ -51,13 +52,22 @@ are good choices
  - Add your new path, `;C:/Program Files/Gamedist`
  - Open a Cmd terminal
  - Type `gamedist.exe help` to ensure you have installed correctly
+ - to use the desktop app, move `gamedistapp.exe` to the same folder and double-click it
  - remove the extract directory and release package to clean up. You may want to keep the readme file somewhere for later reference.
 
 ## Building from source
-You need Go (1.21 or later), `make` and the `zip` tool. Run `make build` from the project root. It writes:
- - `bin/gamedist`: the Linux binary
- - `bin/gamedist.exe`: the Windows binary
- - `dist/gamedist.zip`: a zip containing both binaries and this readme
+You need Go 1.22 or later (or a recent Go with `GOTOOLCHAIN=auto`, which fetches the right version), `make` and the `zip` tool. Run `make build` from the project root. It writes:
+ - `bin/gamedist`: the Linux CLI binary
+ - `bin/gamedist.exe`: the Windows CLI binary
+ - `bin/gamedistapp`: the Linux desktop app
+ - `bin/gamedistapp.exe`: the Windows desktop app
+ - `dist/gamedist.zip`: a zip containing all four binaries and this readme
+
+The desktop app uses Fyne, which needs cgo, so building it needs:
+ - on Linux: a C compiler and the OpenGL, X11 and Wayland development headers. On Debian or Ubuntu: `sudo apt install build-essential libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev`
+ - for the Windows desktop app, built on Linux: the MinGW-w64 cross-compiler and `windres`. On Debian or Ubuntu: `sudo apt install gcc-mingw-w64-x86-64`
+
+The desktop app cannot be built for macOS on Linux, as it needs Apple's SDK and a macOS compiler.
 
 `dist/` is not tracked in git. Use the release package for a supported build.
 
