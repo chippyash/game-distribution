@@ -48,6 +48,11 @@ links into the Windows executable. The `.syso` file is git-ignored. Run `make de
 
 The Windows build uses `-H=windowsgui`, so the app starts without a console window.
 
+## macOS
+
+The desktop app cannot be built for macOS on Linux. It needs Apple's SDK and a macOS compiler, and no macOS build is
+provided with the release.
+
 ## Testing the Windows build on Linux
 
 Wine can run the Windows app for a quick check. Use 64-bit Wine (`wine64`) with a separate prefix, so the default Wine

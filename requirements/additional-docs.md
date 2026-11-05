@@ -29,20 +29,24 @@ notes serve that purpose.
 
 ## Status
 
-Done (not yet committed):
+Committed on `feature/additional_docs`, in commits `2f782d6` and `6283632`:
 
 - `CONTRIBUTING.md` (root): licence header rule, Go version and toolchain, build, run, test and lint commands, the `make test` warning, the version source, Fyne development notes, release notes location, and the Mac builder TODO.
 - `docs/building.md`: toolchain, Linux and Windows build packages, `make` targets and outputs, the Windows `.syso` icon step, and the Wine run command with its caveat.
 - `docs/algorithm.md`: how a distribution is built, including restarts, attempts, the maximum players together minimum with the worked example, and fixture spacing.
-- `CLAUDE.md` (local, git-ignored): the moved facts were removed and replaced by a "Project documentation" section that links to each new file and describes its contents, plus the points that were not moved (CLI arguments, fragile state, distributor code map, desktop app architecture).
+- `docs/desktop-app.md`: the desktop app guide, with screenshots of the main window, inputs, results and menu, all taken on Linux.
+- `docs/releasing.md`: the release process for the package maintainer, with a note that it is for the maintainer only. The Makefile's old `version` and `push` targets were removed.
+- `CLAUDE.md` (local, git-ignored): the moved facts were removed and replaced by a "Project documentation" section that links to each new file and describes its contents.
 - The Mac builder TODO is in both `CONTRIBUTING.md` and `README.md`.
 
-Not yet done:
+Done in the working tree, not yet committed:
 
-- `docs/releasing.md`. It is linked from `CONTRIBUTING.md` and `CLAUDE.md`, so those links are broken until it exists.
-- `docs/desktop-app.md`, and its screenshots in `docs/images/`.
-- Links to the new documents from `README.md`.
-- Checking that the commands and file names in the new documents match the repository.
+- `README.md`: links to the building, contributing, releasing and algorithm documents, and a desktop section trimmed to a summary with a link to the guide. The links are absolute GitHub URLs, because the README is bundled in the release zip.
+
+Still open:
+
+- Your review of the README changes, then a commit on request.
+- Pushing the branch, opening a pull request and merging it, and deciding whether to delete the branch afterwards. These need your instructions.
 
 ## Functional Requirements
 
@@ -59,7 +63,7 @@ Not yet done:
 - The releasing guide says that release notes are written on the GitHub release, and links to the releases page.
 - `README.md` links to each new document from the section it relates to, and no content is duplicated in both places
   beyond a one-line summary.
-- Links between documents are relative, and each one works on GitHub.
+- Links between the new documents are relative, and each one works on GitHub. The links in `README.md` are absolute GitHub URLs on `master`, because the README is bundled in the release zip, where relative links would not work.
 
 ## Non-Functional Requirements
 
