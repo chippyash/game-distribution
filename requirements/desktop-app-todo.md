@@ -117,9 +117,9 @@ Decision made while writing `ui.go`: the input fields are disabled while a run i
 
 ## Phase 8: Git and release
 
-- [ ] **[Claude]** Commit each phase to `feature/desktop-app`, when you ask.
-- [ ] **[You]** Push the branch and open a pull request, or ask me to push once the network is reachable.
-- [ ] **[You]** Merge to `master`, and create the release tag when you're ready.
+- [x] **[Claude]** Commit each phase to `feature/desktop-app`, when you ask.
+- [x] **[You]** Push the branch and open a pull request. Done: pull request #1 from `feature/desktop-app` to `master`, merged on GitHub.
+- [x] **[You]** Merge to `master`, and create the release tag when you're ready. Done: merged, tagged `v1.1.0`, and the release is published at https://github.com/chippyash/game-distribution/releases/tag/v1.1.0.
 
 ## Summary: what needs you
 
