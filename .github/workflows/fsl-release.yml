@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   draft-release:
-    runs-on: ubuntu-latest
+    # 22.04 has glibc 2.35, so the desktop app runs on Ubuntu 22.04+ and Debian 12+
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,6 +20,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 'stable'
+
+      - name: Install desktop app build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev gcc-mingw-w64-x86-64
 
       - name: Calculate FSL Licensing Dates
         id: dates

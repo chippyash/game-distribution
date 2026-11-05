@@ -11,29 +11,31 @@
 package distributor
 
 import (
+	"context"
 	"fmt"
 	errs "github.com/chippyash/gamedistributor/src/errors"
 	"gonum.org/v1/gonum/mat"
 	"math"
 	"math/rand"
-	"runtime/debug"
+	"sync/atomic"
 )
 
 type Distributor struct {
-	numFixtures       int         //the number of fixtures to be played
-	numPlayers        int         //the number of players in the pool
-	playersPerFixture int         //the number of players per fixture
-	matrix            mat.Mutable //the matrix to be populated
-	playerSlots       int         //the number of playing slots available per distribution
-	playerMustPlay    int         //the number of fixtures each player must play
-	remainderSlots    int         //the number of slots remaining after the playerMustPlay
-	attempts          int         //the number of times to try to distribute the fixtures
-	debugCurrFixture  int         //the current fixture being processed
-	debugCurrPlayer   int         //the current player being processed
-	fixtureSpacing    bool        //if true, the fixtures will be spaced evenly for each player
-	maxPlayerTogether int         //the maximum number of times that players to play together in all fixtures
-	minPlayTogether   int         //the minimum number of times that the same players must play together
-	minSameTeam       int         //the minimum number of times that the same team must play together
+	numFixtures       int          //the number of fixtures to be played
+	numPlayers        int          //the number of players in the pool
+	playersPerFixture int          //the number of players per fixture
+	matrix            mat.Mutable  //the matrix to be populated
+	playerSlots       int          //the number of playing slots available per distribution
+	playerMustPlay    int          //the number of fixtures each player must play
+	remainderSlots    int          //the number of slots remaining after the playerMustPlay
+	attempts          int          //the number of times to try to distribute the fixtures
+	debugCurrFixture  int          //the current fixture being processed
+	debugCurrPlayer   int          //the current player being processed
+	fixtureSpacing    bool         //if true, the fixtures will be spaced evenly for each player
+	maxPlayerTogether int          //the maximum number of times that players to play together in all fixtures
+	minPlayTogether   int          //the minimum number of times that the same players must play together
+	minSameTeam       int          //the minimum number of times that the same team must play together
+	attemptsMade      atomic.Int64 //the number of attempts started, readable while Distribute is running
 }
 
 func NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPlayerTogether int, fixtureSpacing bool) *Distributor {
@@ -108,6 +110,11 @@ func (d *Distributor) RemainderSlots() int {
 }
 
 // Attempts returns the number of attempts actually made to resolve the permutation
+// AttemptsMade returns the number of attempts started so far. It is safe to call while Distribute is running
+func (d *Distributor) AttemptsMade() int {
+	return int(d.attemptsMade.Load())
+}
+
 func (d *Distributor) Attempts() int {
 	return d.attempts
 }
@@ -116,9 +123,14 @@ func (d *Distributor) Attempts() int {
 // It will return nil if it fails to find a valid distribution after the
 // number of attempts specified in the constructor
 // Otherwise it will return the distributor instance
-// This function is not thread safe
-func (d *Distributor) Distribute() (*Distributor, error) {
-	defer d.doRecovery()
+// The run stops with the context's error if ctx is cancelled. A panic is returned as an error.
+// This function is not thread safe, but AttemptsMade may be read while it runs
+func (d *Distributor) Distribute(ctx context.Context) (dist *Distributor, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			dist, err = nil, d.recoveredError(r)
+		}
+	}()
 
 	var attempted int
 
@@ -129,6 +141,10 @@ func (d *Distributor) Distribute() (*Distributor, error) {
 
 	//old skool goto jump
 START:
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	d.attemptsMade.Add(1)
 	if attempted >= d.attempts {
 		return nil, errs.TooManyAttempts(attempted, d.attempts)
 	}
@@ -171,11 +187,8 @@ START:
 			}
 		}
 		for j := 0; j < d.playersPerFixture; j++ {
-			var filled int
-			filled = d.getFilled(playerFixtures)
-			if filled == d.numPlayers && d.remainderSlots > 0 {
+			if d.getFilled(playerFixtures) == d.numPlayers && d.remainderSlots > 0 {
 				d.playerMustPlay++
-				filled = d.getFilled(playerFixtures)
 			}
 			currentPlayer := d.choosePlayer(currFixture, playerFixtures, playerBlock)
 			d.debugCurrPlayer = currentPlayer
@@ -277,25 +290,12 @@ func (d *Distributor) choosePlayer(currFixture int, playerFixtures map[int]int, 
 // isInFixture returns true if a player is already in a fixture
 func (d *Distributor) isInFixture(player, fixture int) bool {
 	fix := mat.Row(nil, fixture, d.matrix)
-	if fix[player] == 1 {
-		return true
-	}
-	return false
+	return fix[player] == 1
 }
 
-// doRecovery is the panic recovery mechanism for Distribute()
-func (d *Distributor) doRecovery() {
-	if r := recover(); r != nil {
-		if err, ok := r.(error); ok {
-			//recover returned some error, so log it
-			fmt.Printf("Unexpected error: %s\n", err.Error())
-		} else {
-			//recover returned something else
-			fmt.Printf("Unexpected exception: %v\n", r)
-		}
-		fmt.Printf("Debug: Current Fixture: %d, Current Player: %d\n", d.debugCurrFixture, d.debugCurrPlayer)
-		fmt.Printf("Stack Trace: %s", string(debug.Stack()))
-	}
+// recoveredError converts a panic recovered by Distribute into an error that says where the run had reached
+func (d *Distributor) recoveredError(r interface{}) error {
+	return fmt.Errorf("unexpected failure at fixture %d, player %d: %v", d.debugCurrFixture, d.debugCurrPlayer, r)
 }
 
 // checkMinPlays checks that all players are playing the Must Play figure at least

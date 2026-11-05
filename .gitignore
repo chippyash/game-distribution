@@ -3,3 +3,5 @@
 bin
 CLAUDE.md
 distribution.csv
+dist
+*.syso

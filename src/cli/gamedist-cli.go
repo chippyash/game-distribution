@@ -11,7 +11,7 @@
 package main
 
 import (
-	_ "embed"
+	"context"
 	"encoding/csv"
 	"fmt"
 	"github.com/chippyash/gamedistributor/src/distributor"
@@ -27,8 +27,8 @@ const (
 	MinAllowedAttempts = 1000
 )
 
-//go:embed VERSION
-var version string
+// version is set at build time with -ldflags "-X main.version=<VERSION>"
+var version = "dev"
 
 type cmdFunc func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue)
 
@@ -94,7 +94,7 @@ func cmd() cmdFunc {
 			return
 		}
 
-		dist, err := distributor.NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPlayersTogether, fixtureSpacing).Distribute()
+		dist, err := distributor.NewDistributor(numFixtures, numPlayers, playersPerFixture, attempts, maxPlayersTogether, fixtureSpacing).Distribute(context.Background())
 		if err != nil {
 			println(err.Error())
 			return

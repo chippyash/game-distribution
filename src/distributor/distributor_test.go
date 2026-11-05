@@ -11,6 +11,7 @@
 package distributor_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -24,7 +25,7 @@ const testAttempts = 100000
 // newDistribution runs Distribute for the given settings and fails the test if it returns an error
 func newDistribution(t *testing.T, fixtures, players, perFixture, cap int, spacing bool) *distributor.Distributor {
 	t.Helper()
-	d, err := distributor.NewDistributor(fixtures, players, perFixture, testAttempts, cap, spacing).Distribute()
+	d, err := distributor.NewDistributor(fixtures, players, perFixture, testAttempts, cap, spacing).Distribute(context.Background())
 	if err != nil {
 		t.Fatalf("Distribute(%d, %d, %d, cap %d): unexpected error: %v", fixtures, players, perFixture, cap, err)
 	}
@@ -140,7 +141,7 @@ func TestMustPlayAndRemainderSlots(t *testing.T) {
 }
 
 func TestDistributeRejectsTooFewPlayers(t *testing.T) {
-	_, err := distributor.NewDistributor(4, 2, 3, testAttempts, 1, false).Distribute()
+	_, err := distributor.NewDistributor(4, 2, 3, testAttempts, 1, false).Distribute(context.Background())
 	if !errors.Is(err, errs.ErrTooFewPlayers) {
 		t.Fatalf("got error %v, want %v", err, errs.ErrTooFewPlayers)
 	}

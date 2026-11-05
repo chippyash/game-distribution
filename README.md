@@ -1,13 +1,16 @@
 # Game Distributor
-(c) Ashley Kitson 2024, UK
 
 This utility will attempt to work out a random selection of players for a set of fixtures.  Although originally inspired
 by the need to distribute an even number of fixtures amongst a pool of players in a team across a set of fixtures in Lawn Bowls,
 there is no reason it cannot be used in other games: e.g.
 
- - junior football/rugby where you want to give the children/youths a fair crack at the game
+ - football/rugby where you want to give all the players a fair crack at the game
+ - organising a tournament to set up the first round play-offs
 
-Even where you may want to tweak the actual team selection, this utility will give you a good starting point.
+You may want to tweak the actual team selection, this utility will give you a good starting point. Export the
+result to a CSV file which can be imported using your spreadsheet program, Add player/team labels and fixture dates/names.
+Manually move players around to get the shape you want. For instance, you may have couples that want to play together, or not!
+You may know that certain players are on holiday, so you can swap them for another on that date.
 
 It takes 3 main parameters:
  - number of fixtures
@@ -19,7 +22,11 @@ And provides you with a distribution matrix that you can optionally load into a 
 ## Installation
 
 ### All platforms
-Unzip the supplied `dist/gamedist.zip` file to somewhere convenient
+Download the release package (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
+convenient, e.g. `tar -xzf dist-<version>.tar.gz -C <somewhereconvenient>`. The package contains the binaries for each
+platform, so use the one for yours:
+ - Linux: `gamedist` (CLI) and `gamedistapp` (desktop app)
+ - Windows: `gamedist.exe` (CLI) and `gamedistapp.exe` (desktop app)
 
 ### Linux
 Run the following commands
@@ -29,8 +36,9 @@ are good choices
  - move the `<somewhereconvenient>/gamedist` file to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
    - NB - you may need to prefix the last command with `sudo` depending on your target
  - type `gamedist help` to ensure you have installed correctly
- - remove the extract directory and zip file to clean up 
-   - `rm gamedist.zip`
+ - to use the desktop app, move `<somewhereconvenient>/gamedistapp` to the same place and run `gamedistapp`. It needs OpenGL, Wayland and X11 libraries. On Debian and Ubuntu, install them with `sudo apt install libgl1 libwayland-client0 libx11-6`. The release build runs on Ubuntu 22.04 and later, and Debian 12 and later.
+ - remove the extract directory and release package to clean up 
+   - `rm dist-<version>.tar.gz`
    - `rm -rf <somewhereconvenient>`  
    - Do take care that you are targeting correctly! Else use your graphical file manager
    - You may want to keep the readme file somewhere for later reference.
@@ -44,7 +52,24 @@ are good choices
  - Add your new path, `;C:/Program Files/Gamedist`
  - Open a Cmd terminal
  - Type `gamedist.exe help` to ensure you have installed correctly
- - remove the extract directory and zip file to clean up. You may want to keep the readme file somewhere for later reference.
+ - to use the desktop app, move `gamedistapp.exe` to the same folder and double-click it
+ - remove the extract directory and release package to clean up. You may want to keep the readme file somewhere for later reference.
+
+## Building from source
+You need Go 1.22 or later (or a recent Go with `GOTOOLCHAIN=auto`, which fetches the right version), `make` and the `zip` tool. Run `make build` from the project root. It writes:
+ - `bin/gamedist`: the Linux CLI binary
+ - `bin/gamedist.exe`: the Windows CLI binary
+ - `bin/gamedistapp`: the Linux desktop app
+ - `bin/gamedistapp.exe`: the Windows desktop app
+ - `dist/gamedist.zip`: a zip containing all four binaries and this readme
+
+The desktop app uses Fyne, which needs cgo, so building it needs:
+ - on Linux: a C compiler and the OpenGL, X11 and Wayland development headers. On Debian or Ubuntu: `sudo apt install build-essential libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev`
+ - for the Windows desktop app, built on Linux: the MinGW-w64 cross-compiler and `windres`. On Debian or Ubuntu: `sudo apt install gcc-mingw-w64-x86-64`
+
+The desktop app cannot be built for macOS on Linux, as it needs Apple's SDK and a macOS compiler.
+
+`dist/` is not tracked in git. Use the release package for a supported build.
 
 ## Usage:
  - For Linux the command is `gamedist`. For Windows it is `gamedist.exe`. Both commands are used in a terminal.
@@ -123,6 +148,85 @@ players. e.g. `gamedist 24 7 3 -t`
 ⎢1  0  0  0  0  1  1⎥
 ⎣0  0  0  1  1  1  0⎦
 ```
+## Desktop app
+
+The desktop app does the same job as the CLI, in a window rather than a terminal. It is `gamedistapp` on Linux and 
+`gamedistapp.exe` on Windows, and both are in the release package alongside the CLI.
+
+### Starting the app
+
+Run `gamedistapp` (Linux) or double-click `gamedistapp.exe` (Windows).
+
+### Setting up a distribution
+
+The inputs are on the left, with the labels used in the app:
+
+ - **Num. of Fixture:** the number of fixtures, from 1 to 200.
+ - **Num. of Players:** the number of players, from 1 to 100.
+ - **Players per fixture:** how many players take part in each fixture. It must be at least 1 and no more than the number of players.
+ - **Max players together:** the most fixtures any two players may share. The default is 1. If that is impossible for the other settings, it is raised automatically, and the summary says so.
+ - **Max. Attempts:** how many random attempts the program makes before giving up, from 1000 to 100000. The default is 1000.
+ - **Fixture spacing (-s):** tries to stop players from playing in back-to-back fixtures. It is off by default, and it is a preference rather than a guarantee.
+ - **Transpose (-t):** swaps rows and columns, so fixtures are the rows and players are the columns.
+
+An invalid value shows a message in red under its input, and Start stays disabled until every input is valid. The options start at the CLI defaults.
+
+### Running a distribution
+
+Press **Start**. The run happens in the background, a spinner shows that it is working, and the status line shows the attempt number, 
+for example "Attempt 12 of 1000". Press **Cancel** to stop a run. A cancelled run shows no matrix, and the summary panel 
+says "Cancelled after N attempts". The inputs cannot be changed while a run is going.
+
+### Reading the results
+
+ - The **main panel** shows the matrix. An `X` marks a player taking part in a fixture, and a blank cell means they are not. 
+Rows and columns are labelled `P1` to `Pn` for players and `F1` to `Fn` for fixtures. Players are the rows by default. 
+Scroll in either direction for large matrices.
+ - The **secondary panel** shows the summary, in the same wording as the CLI: the players and fixtures, how many fixtures 
+each player must play, how many players play an extra fixture, whether fixture spacing applied, the maximum play-together 
+value in use, and the attempt number. Errors and notes also appear here.
+
+Changing **Transpose** redraws the matrix straight away. Changing any other input clears the matrix and disables **Save CSV**, 
+so you always save the result that matches the inputs.
+
+### Saving the result
+
+**Save CSV** is enabled once a matrix has been generated. It opens a save dialog with the default name `distribution.csv`. 
+The file is described in [Saving the distribution as CSV](#saving-the-distribution-as-csv).
+
+### Menu
+
+The **Menu** in the window has three entries:
+
+ - **Theme:** opens a dialog with **Light**, **Dark** and **System**. **OK** applies the theme and remembers it for next 
+time. **Cancel** changes nothing. The app starts in the light theme until you choose another.
+ - **About:** shows the version and the licence, with a link to the release page for that version.
+ - **Help:** opens this README for the version you are running, in your default web browser. If the browser cannot be opened, an error dialog says so.
+
+The menu entries have no keyboard shortcuts.
+
+### Hover help
+
+Rest the pointer on an input or its label for about one second, and a short explanation appears beside it. The explanation 
+disappears when the pointer leaves, or when you click the input.
+
+## Saving the distribution as CSV
+
+The CLI's `-c` flag and the desktop app's Save CSV button both save the distribution as a CSV file, in the same format. 
+The CLI writes `distribution.csv` to the current folder. In the desktop app, the Save CSV button is enabled once a 
+distribution has been generated, and opens a save dialog with the default file name `distribution.csv`.
+
+Without Transpose (`-t` in the CLI, or the Transpose option in the app), players are the rows and fixtures are the columns. 
+With Transpose on, fixtures are the rows and players are the columns.
+
+The file uses these conventions, which you can change in your spreadsheet:
+ - `1` means the player is selected for that fixture, and `0` means not selected. Replace these with any symbols you like.
+ - The headings are `P1` to `Pn` for players and `F1` to `Fn` for fixtures. Replace them with human-readable labels, such as names and dates.
+
+## TODO
+
+ - [ ] Find someone willing to build this app on the Mac platform, as the author does not have a Mac and never will.
+
 ## License
 Copyright (c) 2026 Ashley Kitson, UK
 
