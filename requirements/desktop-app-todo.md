@@ -104,9 +104,9 @@ Decision made while writing `ui.go`: the input fields are disabled while a run i
 
 ## Phase 6: Release workflow (`.github/workflows/fsl-release.yml`)
 
-- [ ] **[Claude]** Install `libgl1-mesa-dev`, `xorg-dev`, `libwayland-dev` and `gcc-mingw-w64-x86-64` on the Ubuntu runner.
-- [ ] **[Claude]** Make sure `make build` runs with the `desktop` tag, so that tagged releases include the desktop app.
-- [ ] **[You]** Decide whether the release should also include a macOS build. The requirements exclude macOS, so this is currently out of scope.
+- [x] **[Claude]** Install `libgl1-mesa-dev`, `xorg-dev`, `libwayland-dev` and `gcc-mingw-w64-x86-64` on the Ubuntu runner. A step named "Install desktop app build dependencies" runs before the build in `.github/workflows/fsl-release.yml`.
+- [x] **[Claude]** Make sure `make build` runs with the `desktop` tag, so that tagged releases include the desktop app. `make build` includes `build-desktop`, which uses `-tags desktop`.
+- [x] **[You]** Decide whether the release should also include a macOS build. Decided: no macOS build in the release, because the desktop app cannot be compiled for macOS on a Linux machine. Fyne needs cgo, which needs the Apple SDK and a macOS C compiler, and these are not available on Linux. The CLI can be cross-compiled for macOS on Linux, but it is not part of this decision. A macOS desktop build would need a Mac, or a macOS runner in CI.
 - [ ] **[You]** Verify the workflow: push a test tag, check the draft release contents, then delete the test tag and release.
 
 ## Phase 7: Documentation
