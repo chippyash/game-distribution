@@ -4,7 +4,7 @@ Audience: people who want to create a distribution without using a terminal. Thi
 released in v1.1.0. For the command-line tool, see the [README](../README.md).
 
 The desktop app does the same job as the CLI, in a window. It is `gamedistapp` on Linux and `gamedistapp.exe` on Windows.
-Both are in the release package with the CLI.
+Both are in the release archive with the CLI.
 
 ![The desktop app main window at start](images/desktop-main-window.png)
 
