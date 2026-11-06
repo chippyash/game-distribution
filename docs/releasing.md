@@ -41,8 +41,8 @@ The workflow runs only when a tag starting with `v` is pushed. Pushing a branch 
 - Installs the desktop app build packages: `libgl1-mesa-dev`, `xorg-dev`, `libwayland-dev`, `libxkbcommon-dev` and
   `gcc-mingw-w64-x86-64`.
 - Runs `make build`, which produces the four binaries and `dist/gamedist.zip` (see [building.md](building.md)).
-- Packs the contents of `dist/` into `dist-<tag>.tar.gz`.
-- Creates a **draft** GitHub release for the tag. It attaches the archive, and generates the release notes from the commits
+- Copies `dist/gamedist.zip` to `gamedist-<tag>.zip`. That zip already holds the binaries and `README.md`, so it is not packed again.
+- Creates a **draft** GitHub release for the tag. It attaches the zip, and generates the release notes from the commits
   and pull requests since the previous release.
 - Adds a licence notice to the release body. It gives the release date, the licence (FSL-1.1), and the date on which that
   tag converts to Apache License 2.0, two years after release.

@@ -38,11 +38,12 @@ jobs:
         run: |
           make build
 
-      - name: Package Dist Artifacts Only
+      - name: Name the Release Archive
         id: package
         run: |
-          ARCHIVE_NAME="dist-${{ github.ref_name }}.tar.gz"
-          tar -czf "$ARCHIVE_NAME" -C dist .
+          # dist/gamedist.zip already holds the binaries and README.md, so publish it as is, with the tag in its name
+          ARCHIVE_NAME="gamedist-${{ github.ref_name }}.zip"
+          cp dist/gamedist.zip "$ARCHIVE_NAME"
           echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Draft Release with Automated Changelog & FSL Notice

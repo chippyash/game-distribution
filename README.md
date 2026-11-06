@@ -22,9 +22,9 @@ And provides you with a distribution matrix that you can optionally load into a 
 ## Installation
 
 ### All platforms
-Download the release archive (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
-convenient, e.g. `tar -xzf dist-<version>.tar.gz -C <somewhereconvenient>`. The package contains the binaries for each
-platform, so use the one for yours:
+Download the release archive (`gamedist-<version>.zip`) from the project's Releases page and extract it to somewhere
+convenient, e.g. `unzip gamedist-<version>.zip -d <somewhereconvenient>`. On Windows, right-click the file and choose
+Extract All. The archive contains the binaries for each platform and this README, so use the binaries for yours:
  - Linux: `gamedist` (CLI) and `gamedistapp` (desktop app)
  - Windows: `gamedist.exe` (CLI) and `gamedistapp.exe` (desktop app)
 
@@ -38,7 +38,7 @@ are good choices
  - type `gamedist help` to ensure you have installed correctly
  - to use the desktop app, move `<somewhereconvenient>/gamedistapp` to the same place and run `gamedistapp`. It needs OpenGL, Wayland and X11 libraries. On Debian and Ubuntu, install them with `sudo apt install libgl1 libwayland-client0 libx11-6`. The release build runs on Ubuntu 22.04 and later, and Debian 12 and later.
  - remove the extract directory and release archive to clean up 
-   - `rm dist-<version>.tar.gz`
+   - `rm gamedist-<version>.zip`
    - `rm -rf <somewhereconvenient>`  
    - Do take care that you are targeting correctly! Else use your graphical file manager
 
