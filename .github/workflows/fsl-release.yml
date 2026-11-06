@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*' # Triggers on version tags, e.g., v1.0.0
+  workflow_dispatch: # Builds and checks the packages on a branch. Creates no tag or release
 
 permissions:
   contents: write
@@ -15,9 +16,12 @@ env:
   FEDORA_VERSION: '45' # the .rpm check runs in a fedora:<FEDORA_VERSION> container
 
 jobs:
-  draft-release:
+  build:
     # 22.04 has glibc 2.35, so the desktop app runs on Ubuntu 22.04+ and Debian 12+
     runs-on: ubuntu-22.04
+    outputs:
+      packages: ${{ steps.pins.outputs.packages }}
+      fedora: ${{ steps.pins.outputs.fedora }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -34,25 +38,155 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev gcc-mingw-w64-x86-64
 
-      - name: Calculate FSL Licensing Dates
-        id: dates
+      - name: Decide What to Build
+        id: pins
+        env:
+          REF: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
-          RELEASE_DATE=$(date +"%B %d, %Y")
-          TRANSITION_DATE=$(date -d "+2 years" +"%B %d, %Y")
-          echo "release_date=$RELEASE_DATE" >> $GITHUB_OUTPUT
-          echo "transition_date=$TRANSITION_DATE" >> $GITHUB_OUTPUT
+          echo "fedora=$FEDORA_VERSION" >> "$GITHUB_OUTPUT"
+          # Tags with a hyphen, such as v0.0.1-test, build the zip only. Manual runs build the packages
+          if [ "$REF_TYPE" = "tag" ] && [[ "$REF" == *-* ]]; then
+            echo "packages=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "packages=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Run Makefile Build
         run: |
           make build
 
-      - name: Name the Release Archive
-        id: package
+      - name: Collect the Release Files
+        env:
+          LABEL: ${{ github.ref_type == 'tag' && github.ref_name || 'manual' }}
         run: |
           # dist/gamedist.zip already holds the binaries and README.md, so publish it as is, with the tag in its name
-          ARCHIVE_NAME="gamedist-${{ github.ref_name }}.zip"
-          cp dist/gamedist.zip "$ARCHIVE_NAME"
-          echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+          mkdir -p release
+          cp dist/gamedist.zip "release/gamedist-$LABEL.zip"
+
+      - name: Install nfpm
+        if: steps.pins.outputs.packages == 'true'
+        run: |
+          curl -sSfL -o /tmp/nfpm.tar.gz "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz"
+          echo "${NFPM_SHA256}  /tmp/nfpm.tar.gz" | sha256sum -c -
+          sudo tar -C /usr/local/bin -xzf /tmp/nfpm.tar.gz nfpm
+
+      - name: Build the Linux Packages
+        if: steps.pins.outputs.packages == 'true'
+        run: |
+          make package-linux
+          cp dist/gamedist_*.deb dist/gamedist-*.rpm dist/gamedist-*-linux-amd64.tar.gz release/
+
+      - name: Upload the Release Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: release/*
+          if-no-files-found: error
+
+      - name: Upload the Install Check
+        if: steps.pins.outputs.packages == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-check
+          path: packaging/scripts/check-install.sh
+          if-no-files-found: error
+
+  check-deb-ubuntu:
+    needs: build
+    if: needs.build.outputs.packages == 'true'
+    runs-on: ubuntu-22.04
+    container: ubuntu:22.04
+    steps:
+      - name: Download the Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: release
+      - name: Download the Install Check
+        uses: actions/download-artifact@v4
+        with:
+          name: install-check
+          path: check
+      - name: Install the .deb and Check It
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y desktop-file-utils ./release/gamedist_*.deb
+          sh check/check-install.sh
+
+  check-deb-debian:
+    needs: build
+    if: needs.build.outputs.packages == 'true'
+    runs-on: ubuntu-22.04
+    container: debian:12
+    steps:
+      - name: Download the Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: release
+      - name: Download the Install Check
+        uses: actions/download-artifact@v4
+        with:
+          name: install-check
+          path: check
+      - name: Install the .deb and Check It
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y desktop-file-utils ./release/gamedist_*.deb
+          sh check/check-install.sh
+
+  check-rpm-fedora:
+    needs: build
+    if: needs.build.outputs.packages == 'true'
+    runs-on: ubuntu-22.04
+    container: fedora:${{ needs.build.outputs.fedora }}
+    steps:
+      - name: Download the Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: release
+      - name: Download the Install Check
+        uses: actions/download-artifact@v4
+        with:
+          name: install-check
+          path: check
+      - name: Install the .rpm and Check It
+        run: |
+          dnf install -y desktop-file-utils
+          dnf install -y --nogpgcheck ./release/gamedist-*.rpm
+          sh check/check-install.sh
+
+  draft-release:
+    needs: [build, check-deb-ubuntu, check-deb-debian, check-rpm-fedora]
+    # Runs for tags only. Skipped checks are fine for a tag with a hyphen, which builds the zip only
+    if: >-
+      always() && github.ref_type == 'tag' && needs.build.result == 'success' &&
+      (needs.build.outputs.packages == 'false' ||
+       (needs.check-deb-ubuntu.result == 'success' && needs.check-deb-debian.result == 'success' && needs.check-rpm-fedora.result == 'success'))
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history and tags, so the previous release can be found
+
+      - name: Calculate FSL Licensing Dates
+        id: dates
+        run: |
+          RELEASE_DATE=$(date +"%B %d, %Y")
+          TRANSITION_DATE=$(date -d "+2 years" +"%B %d, %Y")
+          echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
+          echo "transition_date=$TRANSITION_DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Download the Release Files
+        uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: release
 
       - name: Write Release Notes
         env:
@@ -79,7 +213,7 @@ jobs:
             echo ""
             echo "$HEADING"
             echo ""
-            git log --no-merges --pretty='* %s' $RANGE
+            git log --no-merges --pretty='* %s' "$RANGE"
           } > release-notes.md
 
       - name: Create Draft Release with Automated Changelog & FSL Notice
@@ -90,5 +224,5 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true # Instructs GitHub to dynamically generate the "What's Changed" log
-          files: ${{ steps.package.outputs.archive_name }}
+          files: release/*
           body_path: release-notes.md

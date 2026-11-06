@@ -64,15 +64,15 @@ These come from the answers in `requirements/linux-packaging.md`:
 
 ## Phase 6: Release workflow (`.github/workflows/fsl-release.yml`)
 
-- [ ] **[Claude]** Add a step that downloads the pinned `nfpm` and checks its SHA-256 checksum. The step fails if the checksum does not match.
-- [ ] **[Claude]** Add the packaging step after `make build`. It builds the packages from `bin/`, and it is skipped for tags with a hyphen.
-- [ ] **[Claude]** Add a `.deb` check job on `ubuntu-22.04` and a second one in a `debian:12` container. Each installs the package and runs `gamedist help`.
-- [ ] **[Claude]** Add an `.rpm` check job in a pinned `fedora:<N>` container, using `dnf install --nogpgcheck`.
-- [ ] **[Claude]** Add `desktop-file-validate` to the checks, and confirm the installed entry exists.
-- [ ] **[Claude]** Add a `workflow_dispatch` trigger, so the packaging and checks can run on the branch without a tag. A manual run builds and checks the packages, but does not create a tag or a release, so it leaves nothing on GitHub.
-- [ ] **[Claude]** Make the release creation depend on the checks, so a failed check means no draft release.
-- [ ] **[Claude]** Attach the `.deb`, `.rpm` and `.tar.gz` with the zip, using the existing `softprops/action-gh-release` step.
-- [ ] **[Claude]** Check that the release notes step and the draft release behaviour are unchanged.
+- [x] **[Claude]** Add a step that downloads the pinned `nfpm` and checks its SHA-256 checksum. The step fails if the checksum does not match. Done: the `Install nfpm` step downloads `NFPM_VERSION` and runs `sha256sum -c`, which fails on a mismatch.
+- [x] **[Claude]** Add the packaging step after `make build`. It builds the packages from `bin/`, and it is skipped for tags with a hyphen. Done: the `Decide What to Build` step sets `packages=false` for a tag with a hyphen, and the packaging steps are skipped then.
+- [x] **[Claude]** Add a `.deb` check job on `ubuntu-22.04` and a second one in a `debian:12` container. Each installs the package and runs `gamedist help`. Done: `check-deb-ubuntu` (`ubuntu:22.04`) and `check-deb-debian` (`debian:12`) install the `.deb` and run `packaging/scripts/check-install.sh`, which runs `gamedist help`.
+- [x] **[Claude]** Add an `.rpm` check job in a pinned `fedora:<N>` container, using `dnf install --nogpgcheck`. Done: `check-rpm-fedora` runs in `fedora:` with the version from `FEDORA_VERSION`, using `dnf install --nogpgcheck`, and runs the same check script.
+- [x] **[Claude]** Add `desktop-file-validate` to the checks, and confirm the installed entry exists. Done: `check-install.sh` runs `desktop-file-validate`, checks the entry and the three icons, and fails on a missing library.
+- [x] **[Claude]** Add a `workflow_dispatch` trigger, so the packaging and checks can run on the branch without a tag. A manual run builds and checks the packages, but does not create a tag or a release, so it leaves nothing on GitHub. Done: `workflow_dispatch` runs the build and checks, and the `draft-release` job runs for tags only.
+- [x] **[Claude]** Make the release creation depend on the checks, so a failed check means no draft release. Done: `draft-release` needs the three checks, and runs only when they pass or when the tag has a hyphen and builds no packages.
+- [x] **[Claude]** Attach the `.deb`, `.rpm` and `.tar.gz` with the zip, using the existing `softprops/action-gh-release` step. Done: the `packages` artifact holds the zip and the packages, and `softprops/action-gh-release` attaches `release/*`.
+- [x] **[Claude]** Check that the release notes step and the draft release behaviour are unchanged. Done: the release notes step is unchanged. It now runs in the `draft-release` job, with the same dates and the same `git describe` range. `docs/releasing.md` still describes the old steps, and Phase 8 updates it.
 
 ## Phase 7: Testing the workflow
 
