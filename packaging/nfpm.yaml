@@ -1,0 +1,51 @@
+# nfpm configuration for the Linux .deb and .rpm packages. Built by `make package-linux`, which sets PKG_VERSION
+name: gamedist
+arch: amd64 # nfpm writes x86_64 in the .rpm name
+version: ${PKG_VERSION}
+release: 1
+section: utils
+priority: optional
+maintainer: Ashley Kitson (https://github.com/chippyash/game-distribution)
+description: |
+  Distributes players across a set of fixtures, as evenly as possible.
+  Includes the gamedist command line tool and the gamedistapp desktop app.
+vendor: Ashley Kitson
+homepage: https://github.com/chippyash/game-distribution
+license: FSL-1.1
+
+contents:
+  - src: bin/gamedist
+    dst: /usr/bin/gamedist
+  - src: bin/gamedistapp
+    dst: /usr/bin/gamedistapp
+  - src: packaging/gamedistapp.desktop
+    dst: /usr/share/applications/gamedistapp.desktop
+  - src: packaging/icons/hicolor/48x48/apps/gamedistapp.png
+    dst: /usr/share/icons/hicolor/48x48/apps/gamedistapp.png
+  - src: packaging/icons/hicolor/128x128/apps/gamedistapp.png
+    dst: /usr/share/icons/hicolor/128x128/apps/gamedistapp.png
+  - src: packaging/icons/hicolor/256x256/apps/gamedistapp.png
+    dst: /usr/share/icons/hicolor/256x256/apps/gamedistapp.png
+  - dst: /usr/share/doc/gamedist
+    type: dir
+  - src: README.md
+    dst: /usr/share/doc/gamedist/README.md
+  - src: LICENSE
+    dst: /usr/share/doc/gamedist/LICENSE
+
+scripts:
+  postinstall: packaging/scripts/postinstall.sh
+  postremove: packaging/scripts/postremove.sh
+
+overrides:
+  deb:
+    depends:
+      - libgl1
+      - libwayland-client0
+      - libx11-6
+  rpm:
+    # Recommends, not Requires: dnf installs these by default, and keeps them when gamedist is removed, as apt does
+    recommends:
+      - libglvnd-glx
+      - libwayland-client
+      - libX11

@@ -1,4 +1,6 @@
 VERSION=`cat VERSION`
+# Package versions have no leading v, so v1.2.1 becomes 1.2.1
+PKG_VERSION:=$(patsubst v%,%,$(shell cat VERSION))
 
 current_dir:=$(shell pwd)
 test_output:=$(current_dir)/tests/_output
@@ -25,6 +27,19 @@ build-desktop: desktop-icon ## Build the desktop app binaries
 	env GOOS=linux CGO_ENABLED=1 go build -tags desktop -ldflags="-s -w -X main.version=$(VERSION)" -o bin/gamedistapp ./src/desktop/
 	env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go build -tags desktop -ldflags="-s -w -H=windowsgui -X main.version=$(VERSION)" -o bin/gamedistapp.exe ./src/desktop/
 	zip -9 -j dist/gamedist.zip bin/gamedistapp bin/gamedistapp.exe
+
+.PHONY: package-linux
+package-linux: ## Build the Linux .deb, .rpm and .tar.gz packages from bin/ (run make build first)
+	@command -v nfpm >/dev/null 2>&1 || { echo "nfpm not found. Install the version pinned in .github/workflows/fsl-release.yml (NFPM_VERSION)"; exit 1; }
+	@test -x bin/gamedist -a -x bin/gamedistapp || { echo "bin/ is missing the Linux binaries. Run make build first"; exit 1; }
+	mkdir -p dist
+	PKG_VERSION=$(PKG_VERSION) nfpm package --config packaging/nfpm.yaml --packager deb --target dist/
+	PKG_VERSION=$(PKG_VERSION) nfpm package --config packaging/nfpm.yaml --packager rpm --target dist/
+	rm -rf dist/gamedist-$(PKG_VERSION)
+	mkdir -p dist/gamedist-$(PKG_VERSION)
+	cp bin/gamedist bin/gamedistapp README.md LICENSE dist/gamedist-$(PKG_VERSION)/
+	tar -C dist -czf dist/gamedist-$(PKG_VERSION)-linux-amd64.tar.gz gamedist-$(PKG_VERSION)
+	rm -rf dist/gamedist-$(PKG_VERSION)
 
 .PHONY: clean
 clean: ## Clean up the bin and dist directories

@@ -50,8 +50,9 @@ The first release should cover `.deb`, `.rpm` and a `.tar.gz`. Other formats are
 - The `.deb` package name is `gamedist`. Its version is `VERSION` with the leading `v` removed, so `v1.2.1` becomes `1.2.1`.
 - The `.rpm` package has the same content and install layout as the `.deb`: `gamedist` and `gamedistapp` in `/usr/bin`,
   the desktop entry in the `Utility` category with its icon, and `README.md` and `LICENSE` under `/usr/share/doc/gamedist/`.
-- The `.rpm` package declares the same runtime libraries as dependencies, under their RPM names. The names are checked
-  against a Fedora image before the package is first released, because they differ from the Debian names.
+- The `.rpm` package recommends the same runtime libraries, under their RPM names, with `Recommends:` and not `Requires:`.
+  dnf installs recommended packages by default. The names are checked against a Fedora image before the package is first
+  released, because they differ from the Debian names.
 - The `.rpm` package has the same version as the `.deb`, `VERSION` with the leading `v` removed, with the RPM release field
   set to `1`. Its file name follows the RPM convention, for example `gamedist-<version>-1.x86_64.rpm`.
 - The `.tar.gz` package has one top-level directory named `gamedist-<version>`. It holds `gamedist`, `gamedistapp`,
@@ -70,8 +71,10 @@ The first release should cover `.deb`, `.rpm` and a `.tar.gz`. Other formats are
   creates the draft release for them, as it does now.
 - The packages install only their own files. The only other changes are the standard desktop database and icon cache
   refreshes described above, and the packages do not edit the user's shell profile.
-- Removing the `.deb` or `.rpm` package removes every file it installed, including the desktop entry and icon, and leaves
-  the runtime libraries in place, since other programs may use them.
+- Removing the `.deb` or `.rpm` package removes every file it installed, including the desktop entry and icon.
+- Removing the `.deb` leaves the runtime libraries in place, as apt does. Removing the `.rpm` leaves a library in place if it
+  was installed before gamedist. dnf removes a library that gamedist brought in, because nothing else needs it. This is
+  dnf's default behaviour, and the package does not change it.
 - The check in the release workflow also confirms that the installed desktop entry exists and passes
   `desktop-file-validate`.
 
@@ -92,7 +95,7 @@ The first release should cover `.deb`, `.rpm` and a `.tar.gz`. Other formats are
 - `docs/releasing.md` lists the new artifacts in the workflow steps, names the pinned Fedora release and says how to bump
   it, and updates the release steps and the test release cleanup if the workflow changes.
 - `README.md` installation section for Linux names the `.deb` and `.rpm` as the simplest routes, and keeps the zip and
-  `.tar.gz` routes. Each line says how to install its package, for example `sudo apt install ./gamedist_<version>_amd64.deb`
+  `.tar.gz` routes. Each line says how to install its package, for example `sudo apt install ./gamedist_<version>-1_amd64.deb`
   or `sudo dnf install ./gamedist-<version>-1.x86_64.rpm`. The `.rpm` is not signed, so Fedora refuses it unless the user
   adds `--nogpgcheck`, and the README says so. The install line names Fedora N and later, where N is the Fedora release
   pinned in the workflow.
@@ -129,3 +132,6 @@ Answers to the review questions:
 - Tags with a hyphen, such as test tags, build no Linux packages.
 - The `.tar.gz` does not include a `.desktop` file. The README explains how to add a menu entry by hand.
 - The icon is handled during implementation, once the file has been supplied.
+- The `.rpm` uses `Recommends:` for the runtime libraries. dnf then keeps libraries that were installed before gamedist, but
+  removes those that gamedist brought in. Keeping the libraries on removal would need a dnf-specific scriptlet, which
+  hung when tested, so it is not used.

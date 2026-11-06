@@ -8,6 +8,12 @@ on:
 permissions:
   contents: write
 
+env:
+  # Pinned versions for the Linux packages. Bump them by hand, and update the checksum with the new release's checksums.txt
+  NFPM_VERSION: '2.48.0'
+  NFPM_SHA256: '6d7f9a28b2f397934403950fcbba83f598b08d02edbe79a0815b3b4897341750'
+  FEDORA_VERSION: '45' # the .rpm check runs in a fedora:<FEDORA_VERSION> container
+
 jobs:
   draft-release:
     # 22.04 has glibc 2.35, so the desktop app runs on Ubuntu 22.04+ and Debian 12+
