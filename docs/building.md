@@ -20,6 +20,25 @@ sudo apt install build-essential zip libgl1-mesa-dev xorg-dev libwayland-dev lib
 
 The desktop app also needs these libraries at run time: `libgl1`, `libwayland-client0` and `libx11-6`.
 
+## Linux packages
+
+`make package-linux` builds the `.deb`, the `.rpm` and the `.tar.gz` from `bin/`, so run `make build` first. It writes them to
+`dist/`. It needs [nfpm](https://nfpm.goreleaser.com) on your `PATH`, at the version pinned in the release workflow, which is
+v2.48.0 at the time of writing:
+
+```
+curl -sSfL -o /tmp/nfpm.tar.gz https://github.com/goreleaser/nfpm/releases/download/v2.48.0/nfpm_2.48.0_Linux_x86_64.tar.gz
+echo "6d7f9a28b2f397934403950fcbba83f598b08d02edbe79a0815b3b4897341750  /tmp/nfpm.tar.gz" | sha256sum -c -
+sudo tar -C /usr/local/bin -xzf /tmp/nfpm.tar.gz nfpm
+```
+
+The checksum is the one in the release's `checksums.txt`. The `.rpm` is built without any RPM tools, and the `.deb` without
+`dpkg-deb`, so nothing else is needed. The packages contain the binaries, the desktop entry and icons, `README.md` and
+`LICENSE`. The desktop entry and icons are in `packaging/`, and `packaging/nfpm.yaml` describes the packages.
+
+The release workflow builds the packages on `ubuntu-22.04` and checks each one in a clean container. See
+[Releasing](releasing.md).
+
 ## Make targets
 
 - `make build`: the release build. It runs `clean` first, which also runs `go mod tidy` and can rewrite `go.mod` and
@@ -30,6 +49,7 @@ The desktop app also needs these libraries at run time: `libgl1`, `libwayland-cl
 - `make build-gamedist`: the CLI only.
 - `make build-desktop`: the desktop app for Linux and Windows.
 - `make desktop-icon`: compiles the Windows icon resource.
+- `make package-linux`: the Linux `.deb`, `.rpm` and `.tar.gz` packages. See [Linux packages](#linux-packages).
 
 `dist/` is git-ignored.
 

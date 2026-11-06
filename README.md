@@ -29,6 +29,19 @@ Extract All. The archive contains the binaries for each platform and this README
  - Windows: `gamedist.exe` (CLI) and `gamedistapp.exe` (desktop app)
 
 ### Linux
+Packages are the simplest route. Download the package for your distribution from the Releases page and install it.
+Replace `<version>` with the version number without the `v`, for example `1.2.1`.
+ - Debian and Ubuntu: `sudo apt install ./gamedist_<version>-1_amd64.deb`
+ - Fedora: `sudo dnf install --nogpgcheck ./gamedist-<version>-1.x86_64.rpm`. The RPM is not signed, so Fedora refuses to install it without `--nogpgcheck`.
+
+The package installs `gamedist` and `gamedistapp` to `/usr/bin`, adds Game Distributor to the Utilities menu, and installs the
+libraries the desktop app needs. Remove it with `sudo apt remove gamedist` or `sudo dnf remove gamedist`. The packages support
+Debian 12 and later, Ubuntu 22.04 and later, and Fedora 45 and later.
+
+If you do not want a package, use the release zip or the `gamedist-<version>-linux-amd64.tar.gz` archive, which hold the same
+files. Then follow the steps below.
+
+#### Manual install
 Run the following commands
  - `echo $PATH`
  - look for a convenient path in which to install the utility. `/usr/local/bin`, `/home/yourname/bin` or `/home/yourname/.local/bin`
