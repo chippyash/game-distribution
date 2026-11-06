@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Game Distributor
+Comment=Distribute players across a set of fixtures
+Exec=gamedistapp
+Icon=gamedistapp
+Terminal=false
+Categories=Utility;
