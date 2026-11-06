@@ -14,6 +14,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/chippyash/gamedistributor/src/desktop/model"
 	"github.com/chippyash/gamedistributor/src/distributor"
 )
 
@@ -128,7 +130,7 @@ func TestEnterButtonRunsOnEnterOnlyWhenEnabled(t *testing.T) {
 
 // maxContentHeight is the tallest the window content may be, in logical pixels. It leaves room for the title bar and
 // menu on a 1080 pixel screen at 150% scaling
-const maxContentHeight = 640
+const maxContentHeight = 540
 
 // TestWindowFitsSmallScreen checks the window content is no taller than a 150% scaled 1080 pixel screen allows
 func TestWindowFitsSmallScreen(t *testing.T) {
@@ -169,5 +171,51 @@ func TestStartRunsFromEnterInWindow(t *testing.T) {
 	u.cancelRun()
 	for i := 0; u.running && i < 500; i++ {
 		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+// TestFailedRunShowsSummaryTab checks that a run which fails, or is cancelled, moves to the Summary tab, where its message is
+func TestFailedRunShowsSummaryTab(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+	u := newUI(a, "test")
+	defer u.splash.finish()
+	u.splash.finish()
+
+	u.finish(model.Settings{}, nil, nil, errors.New("too many attempts, exiting. Tried 1000 of 1000"))
+	if u.tabs.Selected() != u.summary {
+		t.Errorf("after an error the %q tab is selected, want Summary", u.tabs.Selected().Text)
+	}
+	if got := u.panel.Text; got != "too many attempts, exiting. Tried 1000 of 1000" {
+		t.Errorf("summary text %q", got)
+	}
+
+	u.tabs.Select(u.summary)
+	d := distributor.NewDistributor(24, 7, 3, 1000, 1, false)
+	u.finish(model.Settings{}, d, nil, context.Canceled)
+	if u.tabs.Selected() != u.summary {
+		t.Errorf("after a cancel the %q tab is selected, want Summary", u.tabs.Selected().Text)
+	}
+}
+
+// TestSuccessfulRunShowsMatrixTab checks that a run which produces a matrix moves to the Matrix tab
+func TestSuccessfulRunShowsMatrixTab(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+	u := newUI(a, "test")
+	defer u.splash.finish()
+	u.splash.finish()
+
+	s := model.Settings{Fixtures: 24, Players: 7, PlayersPerFixture: 3, Attempts: 5000, MaxPlayersTogether: 1}
+	d := distributor.NewDistributor(s.Fixtures, s.Players, s.PlayersPerFixture, s.Attempts, s.MaxPlayersTogether, s.Spacing)
+	res, err := d.Distribute(context.Background())
+	if err != nil {
+		t.Fatalf("Distribute: %v", err)
+	}
+
+	u.tabs.Select(u.summary)
+	u.finish(s, d, res, nil)
+	if u.tabs.Selected() != u.matrix {
+		t.Errorf("after a successful run the %q tab is selected, want Matrix", u.tabs.Selected().Text)
 	}
 }

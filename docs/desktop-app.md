@@ -8,7 +8,7 @@ Both are in the release archive with the CLI.
 
 ![The desktop app main window at start](images/desktop-main-window.png)
 
-*Linux, v1.2.0, dark theme. The Windows appearance has not been checked on a real Windows machine.*
+*Linux, v1.2.1, dark theme. The Windows appearance has not been checked on a real Windows machine.*
 
 ## Starting the app
 
@@ -38,31 +38,35 @@ options start at the CLI defaults.
 
 ![The inputs filled in for 24 fixtures, 7 players and 3 per fixture](images/desktop-inputs.png)
 
-*Linux, v1.2.0, dark theme.*
+*Linux, v1.2.1, dark theme.*
 
 ## Running a distribution
 
 Press **Start**. The run happens in the background. A spinner shows that it is working, and the status line shows the attempt
 number, for example "Attempt 12 of 1000".
 
-Press **Cancel** to stop a run. A cancelled run shows no matrix, and the summary panel says "Cancelled after N attempts".
+Press **Cancel** to stop a run. A cancelled run shows no matrix, and the Summary tab says "Cancelled after N attempts".
 The inputs cannot be changed while a run is going.
 
 ## Reading the results
 
-- The **main panel** shows the matrix. An `X` marks a player taking part in a fixture, and a blank cell means they are not.
+- The **Matrix** tab shows the matrix. An `X` marks a player taking part in a fixture, and a blank cell means they are not.
   Rows and columns are labelled `P1` to `Pn` for players and `F1` to `Fn` for fixtures. Players are the rows by default.
   Scroll in either direction for large matrices.
-- The **secondary panel** shows the summary, in the same wording as the CLI: the players and fixtures, how many fixtures each
+- The **Summary** tab shows the summary, in the same wording as the CLI: the players and fixtures, how many fixtures each
   player must play, how many players play an extra fixture, whether fixture spacing applied, the maximum play-together value
   in use, and the attempt number. Errors and notes also appear here.
+
+If a run fails, the **Summary** tab opens by itself and shows the error. For example, "too many attempts, exiting. Tried
+1000 of 1000" means the attempts limit was reached before a valid distribution was found. A cancelled run also opens the
+Summary tab. A successful run opens the **Matrix** tab.
 
 Changing **Transpose** redraws the matrix straight away. Changing any other input clears the matrix and disables **Save
 CSV**, so you always save the result that matches the inputs.
 
 ![The matrix and summary for 24 fixtures, 7 players and 3 per fixture](images/desktop-results.png)
 
-*Linux, v1.2.0, dark theme. The matrix has players as rows and fixtures as columns, and the summary is below it.*
+*Linux, v1.2.1, dark theme. The matrix has players as rows and fixtures as columns, and the summary is on the Summary tab.*
 
 ## Saving the result
 
@@ -84,7 +88,7 @@ The menu entries have no keyboard shortcuts.
 
 ![The Menu open, showing Theme, About, Help and Quit](images/desktop-menu.png)
 
-*Linux, v1.2.0, dark theme.*
+*Linux, v1.2.1, dark theme.*
 
 ## Hover help
 

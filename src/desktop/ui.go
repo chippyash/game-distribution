@@ -39,6 +39,9 @@ type ui struct {
 	app     fyne.App
 	menu    *fyne.MainMenu
 	version string
+	tabs    *container.AppTabs
+	matrix  *container.TabItem
+	summary *container.TabItem
 
 	fixtures, players, perFixture, maxTogether, attempts *helpEntry
 	fieldErrs                                            map[string]*widget.Label
@@ -118,14 +121,17 @@ func newUI(a fyne.App, version string) *ui {
 		u.spinner,
 		u.status,
 	)
-	panel := container.New(layout.NewGridWrapLayout(fyne.NewSize(600, 100)), container.NewVScroll(u.panel))
+	// The summary sits in a tab beside the matrix, so it adds no height to the window
+	u.matrix = container.NewTabItem("Matrix", u.table)
+	u.summary = container.NewTabItem("Summary", container.NewVScroll(u.panel))
+	u.tabs = container.NewAppTabs(u.matrix, u.summary)
 	u.menu = fyne.NewMainMenu(fyne.NewMenu("Menu",
 		fyne.NewMenuItem("Theme", u.onTheme),
 		fyne.NewMenuItem("About", u.onAbout),
 		fyne.NewMenuItem("Help", u.onHelp),
 	))
 	u.win.SetMainMenu(u.menu)
-	main := container.NewBorder(nil, panel, controls, nil, u.table)
+	main := container.NewBorder(nil, nil, controls, nil, u.tabs)
 	u.splashing = true
 	u.splash = newSplashScreen(version, u.splashDone)
 	u.win.SetContent(container.NewStack(main, u.splash.layer, u.tip.layer))
@@ -322,16 +328,20 @@ func (u *ui) onStart() {
 func (u *ui) finish(s model.Settings, d *distributor.Distributor, res *distributor.Distributor, err error) {
 	u.setRunning(false)
 	u.status.SetText("")
+	// A run that produced no matrix shows its message on the Summary tab. A run that did shows the matrix
 	switch {
 	case errors.Is(err, context.Canceled):
 		u.result = nil
 		u.panel.SetText(model.CancelledMessage(d.AttemptsMade()))
+		u.tabs.Select(u.summary)
 	case err != nil:
 		u.result = nil
 		u.panel.SetText(err.Error())
+		u.tabs.Select(u.summary)
 	default:
 		u.result = res
 		u.panel.SetText(model.Summary(s, res))
+		u.tabs.Select(u.matrix)
 	}
 	u.redraw()
 	u.updateButtons()
