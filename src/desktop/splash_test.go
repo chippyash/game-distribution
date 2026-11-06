@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
 )
 
@@ -77,17 +78,34 @@ func TestSplashBlocksInputUntilFaded(t *testing.T) {
 	}
 }
 
-// TestSplashShowsVersionAndCopyright checks the caption under the splash image
+// TestSplashShowsVersionAndCopyright checks the one-line caption under the splash image
 func TestSplashShowsVersionAndCopyright(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 	u := newUI(a, "v1.0.0")
 	defer u.splash.finish()
 
-	if got := u.splash.texts[0].Text; got != "Version v1.0.0" {
-		t.Errorf("version caption %q, want %q", got, "Version v1.0.0")
+	want := "Version v1.0.0    Copyright Ashley Kitson, UK 2026"
+	if got := u.splash.caption.Text; got != want {
+		t.Errorf("caption %q, want %q", got, want)
 	}
-	if got := u.splash.texts[1].Text; got != "Copyright Ashley Kitson, UK 2026" {
-		t.Errorf("copyright caption %q, want %q", got, "Copyright Ashley Kitson, UK 2026")
+}
+
+// TestSplashCaptionIsBelowImage checks that the image and the caption never overlap, at heights where the image is limited
+// by the height of the window
+func TestSplashCaptionIsBelowImage(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+	s := newSplashScreen("v1.0.0", func() {})
+
+	for _, size := range []fyne.Size{fyne.NewSize(1000, 300), fyne.NewSize(1000, 500), fyne.NewSize(1000, 700)} {
+		s.layer.Resize(size)
+		imgBottom := s.img.Position().Y + s.img.Size().Height
+		if imgBottom > s.caption.Position().Y {
+			t.Errorf("at %v the image ends at %v, below the caption top at %v", size, imgBottom, s.caption.Position().Y)
+		}
+		if bottom := s.caption.Position().Y + s.caption.Size().Height; bottom > size.Height {
+			t.Errorf("at %v the caption ends at %v, below the window", size, bottom)
+		}
 	}
 }

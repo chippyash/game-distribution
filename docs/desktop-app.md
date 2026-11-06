@@ -8,7 +8,7 @@ Both are in the release archive with the CLI.
 
 ![The desktop app main window at start](images/desktop-main-window.png)
 
-*Linux, v1.1.0, light theme. The Windows appearance has not been checked on a real Windows machine.*
+*Linux, v1.2.0, dark theme. The Windows appearance has not been checked on a real Windows machine.*
 
 ## Starting the app
 
@@ -38,7 +38,7 @@ options start at the CLI defaults.
 
 ![The inputs filled in for 24 fixtures, 7 players and 3 per fixture](images/desktop-inputs.png)
 
-*Linux, v1.1.0, light theme.*
+*Linux, v1.2.0, dark theme.*
 
 ## Running a distribution
 
@@ -62,7 +62,7 @@ CSV**, so you always save the result that matches the inputs.
 
 ![The matrix and summary for 24 fixtures, 7 players and 3 per fixture](images/desktop-results.png)
 
-*Linux, v1.1.0, light theme. The matrix has players as rows and fixtures as columns, and the summary is below it.*
+*Linux, v1.2.0, dark theme. The matrix has players as rows and fixtures as columns, and the summary is below it.*
 
 ## Saving the result
 
@@ -84,7 +84,7 @@ The menu entries have no keyboard shortcuts.
 
 ![The Menu open, showing Theme, About, Help and Quit](images/desktop-menu.png)
 
-*Linux, v1.1.0, light theme.*
+*Linux, v1.2.0, dark theme.*
 
 ## Hover help
 

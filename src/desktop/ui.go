@@ -46,7 +46,8 @@ type ui struct {
 	tip                                                  *helpTip
 	inputs                                               []fyne.Disableable
 	spacing, transpose                                   *helpCheck
-	start, cancel, save                                  *widget.Button
+	start                                                *enterButton
+	cancel, save                                         *widget.Button
 	splash                                               *splashScreen
 	splashing                                            bool
 	spinner                                              *widget.ProgressBarInfinite
@@ -72,7 +73,7 @@ const inputSpacing = 2
 
 func newUI(a fyne.App, version string) *ui {
 	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}}
-	u.win.Resize(fyne.NewSize(1000, 700))
+	u.win.Resize(fyne.NewSize(1000, 600)) // Fyne grows this to the content's minimum height
 	u.tip = newHelpTip(u.inputsActive)
 	applyTheme(a, model.ThemeFromPreference(a.Preferences().String(model.PrefTheme)))
 
@@ -87,7 +88,7 @@ func newUI(a fyne.App, version string) *ui {
 	u.transpose = newHelpCheck("Transpose (-t)", model.InputHelp(model.FieldTranspose), func(bool) { u.transposeChanged() }, u.tip)
 	u.inputs = []fyne.Disableable{u.fixtures, u.players, u.perFixture, u.maxTogether, u.attempts, u.spacing}
 
-	u.start = widget.NewButton("Start", u.onStart)
+	u.start = newEnterButton("Start", u.onStart)
 	u.cancel = widget.NewButton("Cancel", u.onCancel)
 	u.cancel.Disable()
 	u.save = widget.NewButton("Save CSV", u.onSave)
@@ -113,12 +114,11 @@ func newUI(a fyne.App, version string) *ui {
 	u.form = inputForm
 	controls := container.NewVBox(
 		inputForm,
-		container.NewGridWithColumns(2, u.start, u.cancel),
+		container.NewGridWithColumns(3, u.start, u.cancel, u.save),
 		u.spinner,
 		u.status,
-		u.save,
 	)
-	panel := container.New(layout.NewGridWrapLayout(fyne.NewSize(600, 140)), container.NewVScroll(u.panel))
+	panel := container.New(layout.NewGridWrapLayout(fyne.NewSize(600, 100)), container.NewVScroll(u.panel))
 	u.menu = fyne.NewMainMenu(fyne.NewMenu("Menu",
 		fyne.NewMenuItem("Theme", u.onTheme),
 		fyne.NewMenuItem("About", u.onAbout),
@@ -133,6 +133,27 @@ func newUI(a fyne.App, version string) *ui {
 	u.updateButtons()
 	u.splash.start()
 	return u
+}
+
+// enterButton is a button that also runs on Enter. Fyne buttons only respond to Space, so a focused Start button
+// ignored Enter. The wrapper is the owner, so that the button's own Disable and Enable still apply
+type enterButton struct {
+	*widget.Button
+}
+
+func newEnterButton(label string, tapped func()) *enterButton {
+	b := &enterButton{Button: &widget.Button{Text: label, OnTapped: tapped}}
+	b.ExtendBaseWidget(b)
+	return b
+}
+
+// TypedKey runs the button on Enter, and leaves other keys to the Fyne button
+func (b *enterButton) TypedKey(ev *fyne.KeyEvent) {
+	if ev.Name == fyne.KeyReturn || ev.Name == fyne.KeyEnter {
+		b.Tapped(nil)
+		return
+	}
+	b.Button.TypedKey(ev)
 }
 
 // numberEntry creates an entry for a whole number. Changes are checked by inputChanged

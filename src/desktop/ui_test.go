@@ -15,6 +15,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
@@ -105,5 +106,68 @@ func assertEachFixtureHasTwoPlayers(t *testing.T, u *ui) {
 		if n != 2 {
 			t.Fatalf("fixture %s has %d players, want 2", u.colLabels[c], n)
 		}
+	}
+}
+
+// TestEnterButtonRunsOnEnterOnlyWhenEnabled checks that Enter taps the Start button, and that a disabled button ignores it
+func TestEnterButtonRunsOnEnterOnlyWhenEnabled(t *testing.T) {
+	taps := 0
+	b := newEnterButton("Start", func() { taps++ })
+	enter := &fyne.KeyEvent{Name: fyne.KeyReturn}
+
+	b.TypedKey(enter)
+	if taps != 1 {
+		t.Fatalf("Enter on an enabled button: %d taps, want 1", taps)
+	}
+	b.Disable()
+	b.TypedKey(enter)
+	if taps != 1 {
+		t.Errorf("Enter on a disabled button: %d taps, want 1", taps)
+	}
+}
+
+// maxContentHeight is the tallest the window content may be, in logical pixels. It leaves room for the title bar and
+// menu on a 1080 pixel screen at 150% scaling
+const maxContentHeight = 640
+
+// TestWindowFitsSmallScreen checks the window content is no taller than a 150% scaled 1080 pixel screen allows
+func TestWindowFitsSmallScreen(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+	u := newUI(a, "test")
+	defer u.splash.finish()
+
+	if h := u.win.Content().MinSize().Height; h > maxContentHeight {
+		t.Errorf("window content is %v tall, want at most %v", h, maxContentHeight)
+	}
+}
+
+// TestStartRunsFromEnterInWindow checks that Start takes the focus in the window and runs on Enter
+func TestStartRunsFromEnterInWindow(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+	u := newUI(a, "test")
+	defer u.splash.finish()
+	u.splash.finish()
+
+	u.fixtures.SetText("24")
+	u.players.SetText("7")
+	u.perFixture.SetText("3")
+	u.attempts.SetText("5000")
+	u.updateButtons()
+
+	c := u.win.Canvas()
+	c.Focus(u.start)
+	if c.Focused() != u.start {
+		t.Fatalf("Start did not take the focus")
+	}
+	c.Focused().TypedKey(&fyne.KeyEvent{Name: fyne.KeyReturn})
+	if !u.running {
+		t.Fatalf("Enter on the focused Start did not start a run")
+	}
+
+	u.cancelRun()
+	for i := 0; u.running && i < 500; i++ {
+		time.Sleep(10 * time.Millisecond)
 	}
 }
