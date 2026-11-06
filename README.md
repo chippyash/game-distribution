@@ -43,6 +43,12 @@ are good choices
    - Do take care that you are targeting correctly! Else use your graphical file manager
 
 ### Windows (64 bit)
+
+> **Note:** the Windows programs are not digitally signed yet. Windows or your anti-virus software may block them, or show
+> a warning, the first time you run them while it checks that they are safe. If that happens, check that you downloaded the
+> release from the [project's Releases page](https://github.com/chippyash/game-distribution/releases). You can also read
+> the source code in the [GitHub repository](https://github.com/chippyash/game-distribution) before you run them.
+
  - create a new directory at `C:\Program Files\Gamedist`
  - move the `<somewhereconvient>\gamedist.exe` to `C:\Program Files\Gamedist`
  - goto:
