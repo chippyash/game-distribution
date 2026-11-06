@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history and tags, so the previous release can be found
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -38,12 +40,41 @@ jobs:
         run: |
           make build
 
-      - name: Package Dist Artifacts Only
+      - name: Name the Release Archive
         id: package
         run: |
-          ARCHIVE_NAME="dist-${{ github.ref_name }}.tar.gz"
-          tar -czf "$ARCHIVE_NAME" -C dist .
+          # dist/gamedist.zip already holds the binaries and README.md, so publish it as is, with the tag in its name
+          ARCHIVE_NAME="gamedist-${{ github.ref_name }}.zip"
+          cp dist/gamedist.zip "$ARCHIVE_NAME"
           echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Write Release Notes
+        env:
+          REF: ${{ github.ref_name }}
+          RELEASE_DATE: ${{ steps.dates.outputs.release_date }}
+          TRANSITION_DATE: ${{ steps.dates.outputs.transition_date }}
+        run: |
+          # Commits since the previous release tag. Merge commits are left out, because the PR list covers them
+          PREV=$(git describe --tags --abbrev=0 --match 'v*' --exclude "$REF" HEAD 2>/dev/null || true)
+          if [ -n "$PREV" ]; then
+            RANGE="$PREV..HEAD"
+            HEADING="## Commits since $PREV"
+          else
+            RANGE="HEAD"
+            HEADING="## Commits"
+          fi
+          {
+            echo ""
+            echo "---"
+            echo "### 📄 License Notice for this Release"
+            echo "* **Release Date:** $RELEASE_DATE"
+            echo "* **Current License:** Functional Source License 1.1 (FSL-1.1) — *Non-compete clause applies.*"
+            echo "* **Open Source Transition Date:** $TRANSITION_DATE — *On this date, this specific tag (\`$REF\`) automatically converts to the Apache License 2.0.*"
+            echo ""
+            echo "$HEADING"
+            echo ""
+            git log --no-merges --pretty='* %s' $RANGE
+          } > release-notes.md
 
       - name: Create Draft Release with Automated Changelog & FSL Notice
         uses: softprops/action-gh-release@v2
@@ -54,10 +85,4 @@ jobs:
           name: Release ${{ github.ref_name }}
           generate_release_notes: true # Instructs GitHub to dynamically generate the "What's Changed" log
           files: ${{ steps.package.outputs.archive_name }}
-          body: |
-            
-            ---
-            ### 📄 License Notice for this Release
-            * **Release Date:** ${{ steps.dates.outputs.release_date }}
-            * **Current License:** Functional Source License 1.1 (FSL-1.1) — *Non-compete clause applies.*
-            * **Open Source Transition Date:** ${{ steps.dates.outputs.transition_date }} — *On this date, this specific tag (`${{ github.ref_name }}`) automatically converts to the Apache License 2.0.*
+          body_path: release-notes.md

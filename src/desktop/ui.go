@@ -39,6 +39,9 @@ type ui struct {
 	app     fyne.App
 	menu    *fyne.MainMenu
 	version string
+	tabs    *container.AppTabs
+	matrix  *container.TabItem
+	summary *container.TabItem
 
 	fixtures, players, perFixture, maxTogether, attempts *helpEntry
 	fieldErrs                                            map[string]*widget.Label
@@ -46,7 +49,8 @@ type ui struct {
 	tip                                                  *helpTip
 	inputs                                               []fyne.Disableable
 	spacing, transpose                                   *helpCheck
-	start, cancel, save                                  *widget.Button
+	start                                                *enterButton
+	cancel, save                                         *widget.Button
 	splash                                               *splashScreen
 	splashing                                            bool
 	spinner                                              *widget.ProgressBarInfinite
@@ -72,7 +76,7 @@ const inputSpacing = 2
 
 func newUI(a fyne.App, version string) *ui {
 	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}}
-	u.win.Resize(fyne.NewSize(1000, 700))
+	u.win.Resize(fyne.NewSize(1000, 600)) // Fyne grows this to the content's minimum height
 	u.tip = newHelpTip(u.inputsActive)
 	applyTheme(a, model.ThemeFromPreference(a.Preferences().String(model.PrefTheme)))
 
@@ -87,7 +91,7 @@ func newUI(a fyne.App, version string) *ui {
 	u.transpose = newHelpCheck("Transpose (-t)", model.InputHelp(model.FieldTranspose), func(bool) { u.transposeChanged() }, u.tip)
 	u.inputs = []fyne.Disableable{u.fixtures, u.players, u.perFixture, u.maxTogether, u.attempts, u.spacing}
 
-	u.start = widget.NewButton("Start", u.onStart)
+	u.start = newEnterButton("Start", u.onStart)
 	u.cancel = widget.NewButton("Cancel", u.onCancel)
 	u.cancel.Disable()
 	u.save = widget.NewButton("Save CSV", u.onSave)
@@ -113,19 +117,21 @@ func newUI(a fyne.App, version string) *ui {
 	u.form = inputForm
 	controls := container.NewVBox(
 		inputForm,
-		container.NewGridWithColumns(2, u.start, u.cancel),
+		container.NewGridWithColumns(3, u.start, u.cancel, u.save),
 		u.spinner,
 		u.status,
-		u.save,
 	)
-	panel := container.New(layout.NewGridWrapLayout(fyne.NewSize(600, 140)), container.NewVScroll(u.panel))
+	// The summary sits in a tab beside the matrix, so it adds no height to the window
+	u.matrix = container.NewTabItem("Matrix", u.table)
+	u.summary = container.NewTabItem("Summary", container.NewVScroll(u.panel))
+	u.tabs = container.NewAppTabs(u.matrix, u.summary)
 	u.menu = fyne.NewMainMenu(fyne.NewMenu("Menu",
 		fyne.NewMenuItem("Theme", u.onTheme),
 		fyne.NewMenuItem("About", u.onAbout),
 		fyne.NewMenuItem("Help", u.onHelp),
 	))
 	u.win.SetMainMenu(u.menu)
-	main := container.NewBorder(nil, panel, controls, nil, u.table)
+	main := container.NewBorder(nil, nil, controls, nil, u.tabs)
 	u.splashing = true
 	u.splash = newSplashScreen(version, u.splashDone)
 	u.win.SetContent(container.NewStack(main, u.splash.layer, u.tip.layer))
@@ -133,6 +139,27 @@ func newUI(a fyne.App, version string) *ui {
 	u.updateButtons()
 	u.splash.start()
 	return u
+}
+
+// enterButton is a button that also runs on Enter. Fyne buttons only respond to Space, so a focused Start button
+// ignored Enter. The wrapper is the owner, so that the button's own Disable and Enable still apply
+type enterButton struct {
+	*widget.Button
+}
+
+func newEnterButton(label string, tapped func()) *enterButton {
+	b := &enterButton{Button: &widget.Button{Text: label, OnTapped: tapped}}
+	b.ExtendBaseWidget(b)
+	return b
+}
+
+// TypedKey runs the button on Enter, and leaves other keys to the Fyne button
+func (b *enterButton) TypedKey(ev *fyne.KeyEvent) {
+	if ev.Name == fyne.KeyReturn || ev.Name == fyne.KeyEnter {
+		b.Tapped(nil)
+		return
+	}
+	b.Button.TypedKey(ev)
 }
 
 // numberEntry creates an entry for a whole number. Changes are checked by inputChanged
@@ -301,16 +328,20 @@ func (u *ui) onStart() {
 func (u *ui) finish(s model.Settings, d *distributor.Distributor, res *distributor.Distributor, err error) {
 	u.setRunning(false)
 	u.status.SetText("")
+	// A run that produced no matrix shows its message on the Summary tab. A run that did shows the matrix
 	switch {
 	case errors.Is(err, context.Canceled):
 		u.result = nil
 		u.panel.SetText(model.CancelledMessage(d.AttemptsMade()))
+		u.tabs.Select(u.summary)
 	case err != nil:
 		u.result = nil
 		u.panel.SetText(err.Error())
+		u.tabs.Select(u.summary)
 	default:
 		u.result = res
 		u.panel.SetText(model.Summary(s, res))
+		u.tabs.Select(u.matrix)
 	}
 	u.redraw()
 	u.updateButtons()
@@ -449,7 +480,7 @@ func (u *ui) onTheme() {
 	}, u.win).Show()
 }
 
-// onHelp opens the README for this version in the default browser. A failure is shown in a dialog
+// onHelp opens the desktop app guide for this version in the default browser. A failure is shown in a dialog
 func (u *ui) onHelp() {
 	if u.splashing {
 		return

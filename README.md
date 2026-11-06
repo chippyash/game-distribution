@@ -22,9 +22,9 @@ And provides you with a distribution matrix that you can optionally load into a 
 ## Installation
 
 ### All platforms
-Download the release archive (`dist-<version>.tar.gz`) from the project's Releases page and extract it to somewhere
-convenient, e.g. `tar -xzf dist-<version>.tar.gz -C <somewhereconvenient>`. The package contains the binaries for each
-platform, so use the one for yours:
+Download the release archive (`gamedist-<version>.zip`) from the project's Releases page and extract it to somewhere
+convenient, e.g. `unzip gamedist-<version>.zip -d <somewhereconvenient>`. On Windows, right-click the file and choose
+Extract All. The archive contains the binaries for each platform and this README, so use the binaries for yours:
  - Linux: `gamedist` (CLI) and `gamedistapp` (desktop app)
  - Windows: `gamedist.exe` (CLI) and `gamedistapp.exe` (desktop app)
 
@@ -33,27 +33,32 @@ Run the following commands
  - `echo $PATH`
  - look for a convenient path in which to install the utility. `/usr/local/bin`, `/home/yourname/bin` or `/home/yourname/.local/bin`
 are good choices
- - move the `<somewhereconvenient>/gamedist` file to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
+ - move the `<somewhereconvenient>/gamedist` files to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
    - NB - you may need to prefix the last command with `sudo` depending on your target
  - type `gamedist help` to ensure you have installed correctly
  - to use the desktop app, move `<somewhereconvenient>/gamedistapp` to the same place and run `gamedistapp`. It needs OpenGL, Wayland and X11 libraries. On Debian and Ubuntu, install them with `sudo apt install libgl1 libwayland-client0 libx11-6`. The release build runs on Ubuntu 22.04 and later, and Debian 12 and later.
  - remove the extract directory and release archive to clean up 
-   - `rm dist-<version>.tar.gz`
+   - `rm gamedist-<version>.zip`
    - `rm -rf <somewhereconvenient>`  
    - Do take care that you are targeting correctly! Else use your graphical file manager
-   - You may want to keep the readme file somewhere for later reference.
 
 ### Windows (64 bit)
- - create a new directory at `C:/Program Files/Gamedist`
- - move the `<somewhereconvient>/gamedist.exe` to `C:/Program Files/Gamedist`
+
+> **Note:** the Windows programs are not digitally signed yet. Windows or your anti-virus software may block them, or show
+> a warning, the first time you run them while it checks that they are safe. If that happens, check that you downloaded the
+> release from the [project's Releases page](https://github.com/chippyash/game-distribution/releases). You can also read
+> the source code in the [GitHub repository](https://github.com/chippyash/game-distribution) before you run them.
+
+ - create a new directory at `C:\Program Files\Gamedist`
+ - move the `<somewhereconvient>\gamedist.exe` to `C:\Program Files\Gamedist`
  - goto:
    - -----> Control Panel-> System-> Advanced System Settings->Environment Variables
  - in the System Variables Window, locate `path` and select edit
- - Add your new path, `;C:/Program Files/Gamedist`
+ - Add your new path, `;C:\Program Files\Gamedist`
  - Open a Cmd terminal
  - Type `gamedist.exe help` to ensure you have installed correctly
  - to use the desktop app, move `gamedistapp.exe` to the same folder and double-click it
- - remove the extract directory and release archive to clean up. You may want to keep the readme file somewhere for later reference.
+ - remove the extract directory and release archive to clean up.
 
 ## Building from source
 

@@ -43,7 +43,7 @@ type splashScreen struct {
 	layer    *fyne.Container
 	img      *canvas.Image
 	bg       *canvas.Rectangle
-	texts    []*canvas.Text
+	caption  *canvas.Text
 	anim     *fyne.Animation
 	done     func()
 	timer    *time.Timer
@@ -60,20 +60,15 @@ func newSplashScreen(version string, done func()) *splashScreen {
 	blocker := widget.NewButton("", nil)
 	blocker.Disable()
 
-	versionText := canvas.NewText(fmt.Sprintf("Version %s", version), color.White)
-	copyrightText := canvas.NewText("Copyright Ashley Kitson, UK 2026", color.White)
-	texts := []*canvas.Text{versionText, copyrightText}
-	for _, txt := range texts {
-		txt.Alignment = fyne.TextAlignCenter
-	}
-	caption := container.NewVBox(versionText, copyrightText)
+	caption := canvas.NewText(fmt.Sprintf("Version %s    Copyright Ashley Kitson, UK 2026", version), color.White)
+	caption.Alignment = fyne.TextAlignCenter
 
 	s := &splashScreen{
-		layer: container.New(newSplashLayout(), blocker, bg, img, caption),
-		img:   img,
-		bg:    bg,
-		texts: texts,
-		done:  done,
+		layer:   container.New(newSplashLayout(), blocker, bg, img, caption),
+		img:     img,
+		bg:      bg,
+		caption: caption,
+		done:    done,
 	}
 	s.anim = fyne.NewAnimation(splashFade, s.tick)
 	return s
@@ -100,10 +95,8 @@ func (s *splashScreen) tick(f float32) {
 	s.img.Refresh()
 	s.bg.FillColor = color.NRGBA{A: uint8(255 * (1 - f))}
 	s.bg.Refresh()
-	for _, txt := range s.texts {
-		txt.Color = color.NRGBA{R: 255, G: 255, B: 255, A: uint8(255 * (1 - f))}
-		txt.Refresh()
-	}
+	s.caption.Color = color.NRGBA{R: 255, G: 255, B: 255, A: uint8(255 * (1 - f))}
+	s.caption.Refresh()
 }
 
 // finish removes the splash from the window and tells the main window it can take input
@@ -120,7 +113,7 @@ func (s *splashScreen) finish() {
 // splashMargin is the gap between the bottom of the image and the caption
 const splashMargin = 12
 
-// splashLayout sizes the image to fit the window with its own aspect ratio, and places the caption below the image
+// splashLayout sizes the image to fit the window with its own aspect ratio, and places the one-line caption at the bottom
 type splashLayout struct {
 	aspect float32
 }
@@ -142,24 +135,20 @@ func (l *splashLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 	bg.Move(fyne.NewPos(0, 0))
 	bg.Resize(size)
 
+	// the image fits in the space above the caption, so the two never overlap
+	capSize := caption.MinSize()
+	areaH := size.Height - capSize.Height - splashMargin
 	w := size.Width
 	h := w / l.aspect
-	if h > size.Height {
-		h = size.Height
+	if h > areaH {
+		h = areaH
 		w = h * l.aspect
 	}
-	pos := fyne.NewPos((size.Width-w)/2, (size.Height-h)/2)
-	img.Move(pos)
+	img.Move(fyne.NewPos((size.Width-w)/2, (areaH-h)/2))
 	img.Resize(fyne.NewSize(w, h))
 
-	capSize := caption.MinSize()
-	caption.Resize(capSize)
-	// below the bottom edge of the image, or at the bottom of the window if there is no room below the image
-	capY := pos.Y + h + splashMargin
-	if capY+capSize.Height > size.Height {
-		capY = size.Height - capSize.Height
-	}
-	caption.Move(fyne.NewPos(pos.X+(w-capSize.Width)/2, capY))
+	caption.Resize(fyne.NewSize(size.Width, capSize.Height))
+	caption.Move(fyne.NewPos(0, size.Height-capSize.Height-5))
 }
 
 // MinSize is zero, so the splash can be as small as the window

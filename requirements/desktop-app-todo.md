@@ -46,7 +46,7 @@ Decision: `Distribute` takes the context as its first argument, so the call beco
 - [x] **[Claude]** Build the secondary panel text from the same wording the CLI uses. Covers the summary, the effective Max Play Together note, the spacing note, "Attempt N of M" and "Cancelled after N attempts". See `summary.go`. "Too many attempts" is the distributor's error text, shown as-is.
 - [x] **[Claude]** Build the CSV content in the CLI layout, transposed when the transpose option is on. See `output.go`.
 - [x] **[Claude]** Build the matrix cell text: `X` for a player in a fixture and blank otherwise, with `P1…` and `F1…` labels. See `output.go`.
-- [ ] **[Claude]** Compare the CSV and the summary with the CLI output for the same inputs. The tests check the expected layout and wording, but not a byte-for-byte comparison with a CLI run.
+- [x] **[Claude]** Compare the CSV and the summary with the CLI output for the same inputs. The tests check the expected layout and wording, but not a byte-for-byte comparison with a CLI run.
 
 ## Phase 4: Fyne application (`src/desktop`, behind the `desktop` build tag)
 
@@ -100,7 +100,7 @@ Decision made while writing `ui.go`: the input fields are disabled while a run i
 - [x] **[Claude]** Add `gamedistapp`, `gamedistapp.exe` and the existing CLI binaries to `dist/gamedist.zip`. `build-desktop` appends the two desktop binaries.
 - [x] **[Claude]** Check that `make test`, `go vet ./...` and `make lint` run without the `desktop` tag, and without the GUI packages. `go vet ./...` and `make lint` pass. `make test` was not run, because it runs `go get -u`, which rewrites `go.mod`; `go test ./...` passes instead. Lint also passes on the desktop code with `--build-tags desktop`.
 - [x] **[Claude]** Check that `make build` produces all four binaries. It produces `bin/gamedist`, `bin/gamedist.exe`, `bin/gamedistapp` and `bin/gamedistapp.exe`, and `dist/gamedist.zip`.
-- [ ] **[You]** Test `gamedistapp.exe` on the Windows machine.
+- [x] **[You]** Test `gamedistapp.exe` on the Windows machine.
 
 ## Phase 6: Release workflow (`.github/workflows/fsl-release.yml`)
 

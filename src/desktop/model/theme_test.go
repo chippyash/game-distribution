@@ -33,7 +33,7 @@ func TestThemeFromPreference(t *testing.T) {
 }
 
 func TestHelpURLPinsVersion(t *testing.T) {
-	want := "https://github.com/chippyash/game-distribution/blob/v1.0.0/README.md"
+	want := "https://github.com/chippyash/game-distribution/blob/v1.0.0/docs/desktop-app.md"
 	if got := model.HelpURL("v1.0.0"); got != want {
 		t.Errorf("HelpURL: got %q, want %q", got, want)
 	}
