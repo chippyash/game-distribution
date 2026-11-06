@@ -33,7 +33,7 @@ Run the following commands
  - `echo $PATH`
  - look for a convenient path in which to install the utility. `/usr/local/bin`, `/home/yourname/bin` or `/home/yourname/.local/bin`
 are good choices
- - move the `<somewhereconvenient>/gamedist` file to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
+ - move the `<somewhereconvenient>/gamedist` files to your chosen location. e.g. `mv <somewhereconvenient>/gamedist /usr/local/bin`
    - NB - you may need to prefix the last command with `sudo` depending on your target
  - type `gamedist help` to ensure you have installed correctly
  - to use the desktop app, move `<somewhereconvenient>/gamedistapp` to the same place and run `gamedistapp`. It needs OpenGL, Wayland and X11 libraries. On Debian and Ubuntu, install them with `sudo apt install libgl1 libwayland-client0 libx11-6`. The release build runs on Ubuntu 22.04 and later, and Debian 12 and later.
@@ -41,19 +41,18 @@ are good choices
    - `rm dist-<version>.tar.gz`
    - `rm -rf <somewhereconvenient>`  
    - Do take care that you are targeting correctly! Else use your graphical file manager
-   - You may want to keep the readme file somewhere for later reference.
 
 ### Windows (64 bit)
- - create a new directory at `C:/Program Files/Gamedist`
- - move the `<somewhereconvient>/gamedist.exe` to `C:/Program Files/Gamedist`
+ - create a new directory at `C:\Program Files\Gamedist`
+ - move the `<somewhereconvient>\gamedist.exe` to `C:\Program Files\Gamedist`
  - goto:
    - -----> Control Panel-> System-> Advanced System Settings->Environment Variables
  - in the System Variables Window, locate `path` and select edit
- - Add your new path, `;C:/Program Files/Gamedist`
+ - Add your new path, `;C:\Program Files\Gamedist`
  - Open a Cmd terminal
  - Type `gamedist.exe help` to ensure you have installed correctly
  - to use the desktop app, move `gamedistapp.exe` to the same folder and double-click it
- - remove the extract directory and release archive to clean up. You may want to keep the readme file somewhere for later reference.
+ - remove the extract directory and release archive to clean up.
 
 ## Building from source
 
