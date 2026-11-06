@@ -13,11 +13,11 @@ package model
 import "fmt"
 
 const (
-	helpURLFormat    = "https://github.com/chippyash/game-distribution/blob/%s/README.md"
+	helpURLFormat    = "https://github.com/chippyash/game-distribution/blob/%s/docs/desktop-app.md"
 	releaseURLFormat = "https://github.com/chippyash/game-distribution/releases/tag/%s"
 )
 
-// HelpURL returns the link to the README for a version, for example v1.0.0
+// HelpURL returns the link to the desktop app guide for a version, for example v1.0.0
 func HelpURL(version string) string {
 	return fmt.Sprintf(helpURLFormat, version)
 }

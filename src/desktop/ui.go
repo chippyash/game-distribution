@@ -470,7 +470,7 @@ func (u *ui) onTheme() {
 	}, u.win).Show()
 }
 
-// onHelp opens the README for this version in the default browser. A failure is shown in a dialog
+// onHelp opens the desktop app guide for this version in the default browser. A failure is shown in a dialog
 func (u *ui) onHelp() {
 	if u.splashing {
 		return

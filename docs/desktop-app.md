@@ -76,7 +76,7 @@ The **Menu** in the window has these entries:
 - **Theme:** opens a dialog with **Light**, **Dark** and **System**. **OK** applies the theme and remembers it for next time.
   **Cancel** changes nothing. The app starts in the light theme until you choose another.
 - **About:** shows the version and the licence, with a link to the release page for that version.
-- **Help:** opens the README for the version you are running, in your default web browser. If the browser cannot be opened,
+- **Help:** opens the desktop app guide for the version you are running, in your default web browser. If the browser cannot be opened,
   an error dialog says so.
 - **Quit:** closes the app.
 
