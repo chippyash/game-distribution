@@ -28,7 +28,7 @@ func hoverAt(x, y float32) *desktop.MouseEvent {
 func TestHoverHelpWaitsForDelayAndHidesOnLeave(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 	u.splashing = false
 
@@ -71,7 +71,7 @@ func TestHoverHelpWaitsForDelayAndHidesOnLeave(t *testing.T) {
 func TestHoverHelpIsOffDuringSplash(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 
 	u.players.MouseIn(hoverAt(20, 20))
@@ -86,7 +86,7 @@ func TestHoverHelpIsOffDuringSplash(t *testing.T) {
 func TestLabelsAndChecksHaveHelp(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 	if u.spacing.help.text == "" || u.transpose.help.text == "" || u.fixtures.help.text == "" {
 		t.Errorf("an input is missing its help text")
@@ -97,7 +97,7 @@ func TestLabelsAndChecksHaveHelp(t *testing.T) {
 func TestInputsAcceptTyping(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 
 	u.splash.finish()
