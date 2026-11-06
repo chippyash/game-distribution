@@ -60,7 +60,8 @@ The first release should cover `.deb`, `.rpm` and a `.tar.gz`. Other formats are
   entry. The README says how to add one by hand, or the user can use the `.deb` or `.rpm`.
 - The release workflow attaches the Linux packages to the same release as `gamedist-<tag>.zip`. The workflow still creates
   a draft release, as it does now.
-- The package build runs without network access beyond the package sources that the workflow already uses.
+- The package build needs no network access beyond the package sources that the workflow already uses, except for
+  downloading the pinned `nfpm` release. That download is checked against its SHA-256 checksum before it is used.
 - Each package is checked in the release workflow before it is attached. The check installs the `.deb` on a clean
   `ubuntu-22.04` image and again on a clean `debian:12` container, and the `.rpm` on a clean `fedora:<N>` container. It runs
   `gamedist help` after each install. `<N>` is pinned in the workflow and bumped by hand at each release. Running `gamedistapp` needs a display, so the check only confirms that the binary starts with
@@ -135,3 +136,27 @@ Answers to the review questions:
 - The `.rpm` uses `Recommends:` for the runtime libraries. dnf then keeps libraries that were installed before gamedist, but
   removes those that gamedist brought in. Keeping the libraries on removal would need a dnf-specific scriptlet, which
   hung when tested, so it is not used.
+
+## Status
+
+Checked at the end of implementation (Phase 9). "Met" means verified locally or in the dispatch run. "Met in the workflow"
+means the workflow does it, but no tag run has exercised it yet.
+
+- Met: `make package-linux` builds the `.deb`, `.rpm` and `.tar.gz` from `bin/`, and fails clearly without `nfpm` or binaries.
+- Met: the `.deb` and `.rpm` install `gamedist` and `gamedistapp` to `/usr/bin`, with the desktop entry, icons, `README.md`
+  and `LICENSE`. The entry is in the `Utility` category and passes `desktop-file-validate`.
+- Met: the CLI has no menu entry, and the `.tar.gz` has no `.desktop` file.
+- Met: removing each package removes every file it installed. Library behaviour is as amended above.
+- Met: the desktop database and icon cache refreshes do nothing harmful when their tools are missing.
+- Met: the `.deb` declares its runtime libraries, and the `.rpm` recommends them, as amended above.
+- Met: the `.deb` is named `gamedist_<version>-1_amd64.deb`, and the `.rpm` is named `gamedist-<version>-1.x86_64.rpm`.
+- Met: the `.deb` installs and runs on Ubuntu 22.04 and Debian 12, and the `.rpm` on Fedora 45. The desktop app runs on each
+  when built in a 22.04 container.
+- Met in the workflow: each package is checked in a clean container before it is attached, and a failed check fails the
+  workflow and creates no draft release. The dispatch run passed all checks.
+- Met in the workflow: `workflow_dispatch` runs the build and checks without a tag or release.
+- Met in the workflow: a tag with a hyphen builds the zip only.
+- Met in the workflow: the packages and the zip are attached to the draft release. Not yet exercised on a tag.
+- Met: the package build needs no network access beyond the existing package sources, except the pinned, checksum-checked
+  `nfpm` download, as amended above.
+- Not yet checked: the packages on a real Ubuntu, Fedora and Debian desktop (see the plan's Phase 9).
