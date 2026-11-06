@@ -420,3 +420,52 @@ func TestMenuItemIsOnlyOfferedWhenEnabled(t *testing.T) {
 		t.Errorf("menu offers %q where it is disabled: %v", label, labels(u))
 	}
 }
+
+func TestQuestionButtonsStoreTheRightAnswer(t *testing.T) {
+	t.Run("never ask stores never", func(t *testing.T) {
+		env, _ := newTestLaunch(t)
+		u, a := quietUI(t, env)
+		d, buttons := u.launchQuestion()
+		d.Show()
+		buttons["never"].OnTapped()
+		if got := a.Preferences().String(model.ChoiceKey); got != model.ChoiceNever {
+			t.Errorf("choice = %q, want never", got)
+		}
+	})
+	t.Run("not now stores nothing", func(t *testing.T) {
+		env, _ := newTestLaunch(t)
+		u, a := quietUI(t, env)
+		d, buttons := u.launchQuestion()
+		d.Show()
+		buttons["not-now"].OnTapped()
+		if got := a.Preferences().String(model.ChoiceKey); got != "" {
+			t.Errorf("choice = %q, want none", got)
+		}
+	})
+	t.Run("create makes the shortcut and stores created", func(t *testing.T) {
+		env, _ := newTestLaunch(t)
+		u, a := quietUI(t, env)
+		d, buttons := u.launchQuestion()
+		d.Show()
+		buttons["create"].OnTapped()
+		if got := a.Preferences().String(model.ChoiceKey); got != model.ChoiceCreated {
+			t.Errorf("choice = %q, want created", got)
+		}
+		if _, err := os.Stat(desktopPath(env)); err != nil {
+			t.Errorf("shortcut not made: %v", err)
+		}
+	})
+	t.Run("closing without a button is Not now", func(t *testing.T) {
+		env, _ := newTestLaunch(t)
+		u, a := quietUI(t, env)
+		d, _ := u.launchQuestion()
+		d.Show()
+		d.Hide()
+		if got := a.Preferences().String(model.ChoiceKey); got != "" {
+			t.Errorf("choice = %q, want none", got)
+		}
+		if _, err := os.Stat(desktopPath(env)); err == nil {
+			t.Error("a shortcut was made when the dialog was closed")
+		}
+	})
+}

@@ -211,22 +211,35 @@ func joinErrors(errs []error) string {
 
 // askLauncher shows the first-run question. Dismissing it counts as "Not now"
 func (u *ui) askLauncher() {
+	d, _ := u.launchQuestion()
+	d.Show()
+}
+
+// launchQuestion builds the first-run question, with its buttons keyed "create", "not-now" and "never". Each button sets
+// the answer before it hides the dialog, and the close handler acts on the answer. Closing the dialog without a button
+// leaves the answer empty, which is Not now
+func (u *ui) launchQuestion() (*dialog.CustomDialog, map[string]*widget.Button) {
 	answer := ""
 	content := widget.NewLabel("Create a desktop shortcut for Game Distributor?")
 	content.Wrapping = fyne.TextWrapWord
 	d := dialog.NewCustomWithoutButtons("Desktop shortcut", content, u.win)
-	create := &widget.Button{Text: "Create", Importance: widget.HighImportance, OnTapped: func() {
+	buttons := map[string]*widget.Button{
+		"create":  {Text: "Create", Importance: widget.HighImportance},
+		"not-now": {Text: "Not now"},
+		"never":   {Text: "Never ask"},
+	}
+	buttons["create"].OnTapped = func() {
 		answer = "create"
 		d.Hide()
-	}}
-	notNow := &widget.Button{Text: "Not now", OnTapped: d.Hide}
-	never := &widget.Button{Text: "Never ask", OnTapped: func() {
+	}
+	buttons["not-now"].OnTapped = d.Hide
+	buttons["never"].OnTapped = func() {
 		answer = "never"
 		d.Hide()
-	}}
-	d.SetButtons([]fyne.CanvasObject{create, notNow, never})
+	}
+	d.SetButtons([]fyne.CanvasObject{buttons["create"], buttons["not-now"], buttons["never"]})
 	d.SetOnClosed(func() { u.applyLauncherAnswer(answer) })
-	d.Show()
+	return d, buttons
 }
 
 // applyLauncherAnswer acts on the first-run answer: "create", "never", or "" for Not now, which stores nothing
