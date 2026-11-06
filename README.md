@@ -187,6 +187,15 @@ The file uses these conventions, which you can change in your spreadsheet:
 
  - [ ] Find someone willing to build this app on the Mac platform, as the author does not have a Mac and never will.
 
+## Release strategy
+
+Releases are made for Linux first, then for Windows, and for macOS when the project has the means to build it.
+
+ - **Linux:** Debian and Ubuntu (`.deb`), Fedora (`.rpm`), and any other Linux (`.tar.gz`).
+ - **Windows (64 bit):** the release zip with `gamedist.exe` and `gamedistapp.exe`. The Windows programs are not digitally
+   signed yet.
+ - **macOS:** not yet released. See the TODO above.
+
 ## License
 Copyright (c) 2026 Ashley Kitson, UK
 
