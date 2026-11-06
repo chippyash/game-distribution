@@ -1,14 +1,14 @@
 # Desktop app guide
 
 Audience: people who want to create a distribution without using a terminal. This guide describes the desktop app as
-released in v1.1.0. For the command-line tool, see the [README](../README.md).
+released in the current version. For the command-line tool, see the [README](../README.md).
 
 The desktop app does the same job as the CLI, in a window. It is `gamedistapp` on Linux and `gamedistapp.exe` on Windows.
 Both are in the release archive with the CLI.
 
 ![The desktop app main window at start](images/desktop-main-window.png)
 
-*Linux, v1.2.1, dark theme. The Windows appearance has not been checked on a real Windows machine.*
+*Linux, dark theme. The Windows appearance has not been checked on a real Windows machine.*
 
 ## Starting the app
 
@@ -38,7 +38,7 @@ options start at the CLI defaults.
 
 ![The inputs filled in for 24 fixtures, 7 players and 3 per fixture](images/desktop-inputs.png)
 
-*Linux, v1.2.1, dark theme.*
+*Linux, dark theme.*
 
 ## Running a distribution
 
@@ -66,7 +66,7 @@ CSV**, so you always save the result that matches the inputs.
 
 ![The matrix and summary for 24 fixtures, 7 players and 3 per fixture](images/desktop-results.png)
 
-*Linux, v1.2.1, dark theme. The matrix has players as rows and fixtures as columns, and the summary is on the Summary tab.*
+*Linux, dark theme. The matrix has players as rows and fixtures as columns, and the summary is on the Summary tab.*
 
 ## Saving the result
 
@@ -88,7 +88,7 @@ The menu entries have no keyboard shortcuts.
 
 ![The Menu open, showing Theme, About, Help and Quit](images/desktop-menu.png)
 
-*Linux, v1.2.1, dark theme.*
+*Linux, dark theme.*
 
 ## Hover help
 
