@@ -251,3 +251,71 @@ confirm that.
 4. **A GNOME session to test on.** GNOME is not installed on this machine. Should I install GNOME alongside KDE for the trust check,
    or will you test on a GNOME machine? **Answered:** no. GNOME is not installed on this machine, and the GNOME check is not run here. It is done on a GNOME machine instead.
 
+
+## Status
+
+Checked at the end of implementation (Phase 7). "Met" means verified by the tests, by the manual runs in the containers,
+or by reading the code. "Met in the app" means the behaviour exists and was seen working. "Not yet checked" means the check
+needs a machine that was not available.
+
+### Asking
+
+- Met: the question is asked after the splash, after the refresh, and only if the stored choice is empty, the app is not root,
+  and there is a Desktop folder. Tests and manual run.
+- Met: the dialog is modal. Dismissing it counts as Not now. Tests, and a manual run for the buttons.
+- Met: Create stores `created` only when the Desktop shortcut is created. Never ask stores `never`. Not now stores nothing and
+  the question returns on the next start. Tests and manual run.
+- Met: the menu item works at any time, says so in one line when everything is current, and stores `created` when it creates
+  the Desktop shortcut. Manual run.
+- Met: with no Desktop folder the question is not asked, and the menu item reports it. Code, and the Desktop-folder tests.
+
+### Creating the shortcut
+
+- Met: the Desktop folder is found with `xdg-user-dir`, falls back to `~/Desktop` when that command cannot run, and a result
+  equal to `$HOME` counts as no folder. Model tests.
+- Met: the shortcut is `gamedistapp.desktop`, with the same name, comment and category as the package's entry. Model tests.
+- Met: `Exec` is the quoted, escaped path of the running binary, and the shortcut follows symbolic links to the real binary.
+  Tests, and the manual run.
+- Met: `Icon` is the package's icon when installed, otherwise the icon written under `~/.local/share/icons`. Model tests.
+- Met: the marker `X-Gamedist-Managed=true` is written, and it is the only way the app recognises its own files. Tests.
+- Met: the icon is embedded, and rewritten when its bytes differ. Tests.
+- Met: modes are `0755` for the entries and `0644` for the icon. Tests.
+- Met in the app, GNOME trust not yet checked on a real GNOME desktop: `gio` marks the shortcut trusted. In the container,
+  `gio` reported the attribute as not supported, and the manual Permissions step was shown.
+- Met: the menu entry checkbox appears only when no system entry exists, and only in the menu item, not the first-run
+  dialog. Tests.
+- Met: the shortcut and the menu entry are reported separately, and a failure keeps the one that succeeded. Code, and the
+  report tests.
+
+### Keeping the shortcut up to date
+
+- Met: on start, the app rewrites its own shortcut or menu entry when `Exec`, `Icon`, `Name`, `Comment` or `Categories`
+  differ. Tests, and a manual move of the binary.
+- Met: when a system menu entry exists, the app removes its own user menu entry. Tests, and the `.rpm` and `.deb` runs.
+- Met: the app never changes or deletes a file without the marker. Tests, and a manual run with a foreign file.
+
+### Errors
+
+- Met: a failed create shows the reason in a dialog and stores nothing. Tests, and the manual conflict run. A read-only Desktop
+  folder was not tested.
+- Met: a refresh failure is logged and kept for the menu item, with no dialog. Code.
+- Met: running from a temporary folder is refused, with a dialog that says why. Tests, and the manual run.
+- Met: the question is never asked as root, and no shortcut is created as root. Tests.
+
+### Windows
+
+- Met in code: the question is not asked, and the menu item is hidden. Tests cover the disabled case. The app was not run
+  on Windows.
+
+### Removal
+
+- Met: removing the package leaves the Desktop shortcut, which then stops working, and `docs/desktop-app.md` says so. Manual
+  runs of both packages.
+
+### Non-functional
+
+- Met: the question appears once the splash has finished, and is answered or dismissed in one step.
+- Met: the logic is in `src/desktop/model`, and is tested without a display.
+- Met: no new runtime dependency. `xdg-user-dir`, `gio` and `update-desktop-database` are used when present.
+- Not yet checked: the trusted step and the hidden-icons sentence on a real GNOME desktop. Needs your check.
+- Met: the dialog and menu text are in English.
