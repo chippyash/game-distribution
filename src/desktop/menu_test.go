@@ -26,7 +26,7 @@ import (
 func TestMenuHasThemeAboutAndHelp(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 
 	if len(u.menu.Items) != 1 {
@@ -51,7 +51,7 @@ func TestSavedThemeIsApplied(t *testing.T) {
 		t.Fatalf("saved theme read back as %q, want %q", got, model.ThemeDark)
 	}
 
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 	if !reflect.DeepEqual(a.Settings().Theme(), newVariantTheme(theme.VariantDark)) {
 		t.Errorf("dark theme not applied at startup")
@@ -62,7 +62,7 @@ func TestSavedThemeIsApplied(t *testing.T) {
 func TestNoSavedThemeStartsLight(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 	if !reflect.DeepEqual(a.Settings().Theme(), newVariantTheme(theme.VariantLight)) {
 		t.Errorf("light theme not applied when nothing is saved")

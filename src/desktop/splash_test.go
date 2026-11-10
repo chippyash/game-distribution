@@ -33,7 +33,7 @@ func TestSplashTimings(t *testing.T) {
 func TestSplashBlocksInputUntilFaded(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "test")
+	u := newTestUI(a, "test")
 	defer u.splash.finish()
 
 	u.fixtures.SetText("24")
@@ -82,7 +82,7 @@ func TestSplashBlocksInputUntilFaded(t *testing.T) {
 func TestSplashShowsVersionAndCopyright(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "v1.0.0")
+	u := newTestUI(a, "v1.0.0")
 	defer u.splash.finish()
 
 	want := "Version v1.0.0    Copyright Ashley Kitson, UK 2026"

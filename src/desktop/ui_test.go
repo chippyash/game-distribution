@@ -30,7 +30,7 @@ import (
 func TestGridAt100FixturesBy50Players(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "test")
+	u := newTestUI(a, "test")
 	defer u.splash.finish()
 
 	u.fixtures.SetText("100")
@@ -136,7 +136,7 @@ const maxContentHeight = 540
 func TestWindowFitsSmallScreen(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "test")
+	u := newTestUI(a, "test")
 	defer u.splash.finish()
 
 	if h := u.win.Content().MinSize().Height; h > maxContentHeight {
@@ -148,7 +148,7 @@ func TestWindowFitsSmallScreen(t *testing.T) {
 func TestStartRunsFromEnterInWindow(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "test")
+	u := newTestUI(a, "test")
 	defer u.splash.finish()
 	u.splash.finish()
 
@@ -178,7 +178,7 @@ func TestStartRunsFromEnterInWindow(t *testing.T) {
 func TestFailedRunShowsSummaryTab(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "test")
+	u := newTestUI(a, "test")
 	defer u.splash.finish()
 	u.splash.finish()
 
@@ -202,7 +202,7 @@ func TestFailedRunShowsSummaryTab(t *testing.T) {
 func TestSuccessfulRunShowsMatrixTab(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
-	u := newUI(a, "test")
+	u := newTestUI(a, "test")
 	defer u.splash.finish()
 	u.splash.finish()
 

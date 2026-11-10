@@ -63,6 +63,9 @@ type ui struct {
 	cancelRun            context.CancelFunc
 	running              bool
 	cancelling           bool
+
+	launch       launcherEnv // what the desktop shortcut needs from the system
+	launcherNote string      // the last refresh problem, shown in the menu item
 }
 
 // newWindow builds the main window
@@ -75,7 +78,13 @@ func newWindow(a fyne.App, version string) fyne.Window {
 const inputSpacing = 2
 
 func newUI(a fyne.App, version string) *ui {
-	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}}
+	return newUIWithLauncher(a, version, defaultLauncherEnv())
+}
+
+// newUIWithLauncher builds the main window with the given desktop shortcut settings. Tests pass a disabled one, so they
+// never touch the real Desktop or application menu
+func newUIWithLauncher(a fyne.App, version string, launch launcherEnv) *ui {
+	u := &ui{win: a.NewWindow("Game Distributor"), app: a, version: version, fieldErrs: map[string]*widget.Label{}, launch: launch}
 	u.win.Resize(fyne.NewSize(1000, 600)) // Fyne grows this to the content's minimum height
 	u.tip = newHelpTip(u.inputsActive)
 	applyTheme(a, model.ThemeFromPreference(a.Preferences().String(model.PrefTheme)))
@@ -125,11 +134,12 @@ func newUI(a fyne.App, version string) *ui {
 	u.matrix = container.NewTabItem("Matrix", u.table)
 	u.summary = container.NewTabItem("Summary", container.NewVScroll(u.panel))
 	u.tabs = container.NewAppTabs(u.matrix, u.summary)
-	u.menu = fyne.NewMainMenu(fyne.NewMenu("Menu",
-		fyne.NewMenuItem("Theme", u.onTheme),
-		fyne.NewMenuItem("About", u.onAbout),
-		fyne.NewMenuItem("Help", u.onHelp),
-	))
+	items := []*fyne.MenuItem{fyne.NewMenuItem("Theme", u.onTheme)}
+	if u.launch.enabled {
+		items = append(items, fyne.NewMenuItem("Create desktop shortcut", u.onCreateShortcut))
+	}
+	items = append(items, fyne.NewMenuItem("About", u.onAbout), fyne.NewMenuItem("Help", u.onHelp))
+	u.menu = fyne.NewMainMenu(fyne.NewMenu("Menu", items...))
 	u.win.SetMainMenu(u.menu)
 	main := container.NewBorder(nil, nil, controls, nil, u.tabs)
 	u.splashing = true
@@ -267,6 +277,7 @@ func (u *ui) updateButtons() {
 func (u *ui) splashDone() {
 	u.splashing = false
 	u.updateButtons()
+	u.startLauncher()
 }
 
 // setRunning shows or hides the progress indicator and cancel button, and enables or disables the inputs
